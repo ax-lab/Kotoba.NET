@@ -3,7 +3,7 @@
 	"ignorePaths": ["obj", "bin", "*.csproj", "*.sln", "cspell.json"],
 	"dictionaryDefinitions": [],
 	"dictionaries": [],
-	"words": [],
+	"words": ["xunit"],
 	"ignoreWords": [],
 	"import": []
 }

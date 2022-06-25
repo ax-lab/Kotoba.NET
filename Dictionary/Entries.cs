@@ -1,5 +1,9 @@
 ﻿namespace Dictionary;
 
-public class Entries
+public static class Entries
 {
+	public static Entry? ById(ulong id)
+	{
+		return null;
+	}
 }

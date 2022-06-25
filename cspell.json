@@ -1,9 +1,16 @@
 {
 	"version": "0.2",
-	"ignorePaths": ["obj", "bin", "*.csproj", "*.sln", "cspell.json"],
+	"ignorePaths": [
+		"obj",
+		"bin",
+		"*.csproj",
+		"*.sln",
+		"cspell.json",
+		"source-data"
+	],
 	"dictionaryDefinitions": [],
 	"dictionaries": [],
-	"words": ["xunit"],
+	"words": ["JLPT", "xunit"],
 	"ignoreWords": [],
 	"import": []
 }

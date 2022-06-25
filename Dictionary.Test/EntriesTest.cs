@@ -13,7 +13,7 @@ public class Entries_ById
 	public void loads_entry()
 	{
 		var entry = Entries.ById(1264540) ?? throw new Exception("entry not found");
-		Assert.Equal(entry.Id, 1264540ul);
-		Assert.Equal(entry.Kanji[0].Text, "言葉");
+		Assert.Equal(1264540, entry.Id);
+		Assert.Equal("言葉", entry.Kanji[0].Text);
 	}
 }

@@ -2,8 +2,17 @@
 
 public static class Entries
 {
-	public static Entry? ById(ulong id)
+	const string DatabaseName = "entries.db";
+
+	public static Entry? ById(long id)
 	{
-		return null;
+		using (var db = new EntryDatabase())
+		{
+			using (var cmd = db.CreateCommand("SELECT * FROM entries WHERE sequence = $sequence"))
+			{
+				cmd.Parameters.AddWithValue("$sequence", id);
+				return db.QueryRows(cmd).FirstOrDefault();
+			}
+		}
 	}
 }

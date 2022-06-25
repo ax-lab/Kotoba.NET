@@ -2,7 +2,7 @@ namespace Dictionary;
 
 public record Entry
 {
-	public ulong Id { get; init; }
+	public long Id { get; init; }
 
 	public IReadOnlyList<EntryKanji> Kanji { get; init; } = new List<EntryKanji>();
 

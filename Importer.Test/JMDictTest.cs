@@ -5,18 +5,19 @@ public class JMDict_Open
 	[Fact]
 	public void should_open_file()
 	{
-		using (var file = JMDict.Open())
+		using (var xml = JMDict.Open())
 		{
-			Assert.True(file.Size > 0, "file size should not be empty");
+			Assert.NotNull(xml);
+			Assert.True(xml.Read());
 		}
 	}
 
 	[Fact]
 	public void should_read_entry()
 	{
-		using (var file = JMDict.Open())
+		using (var xml = JMDict.Open())
 		{
-			var entries = file.ReadEntries();
+			var entries = JMDict.ReadEntries(xml);
 			var a = entries.First(x => x.Sequence == "1000000");
 			Assert.Equal("1000000", a.Sequence);
 

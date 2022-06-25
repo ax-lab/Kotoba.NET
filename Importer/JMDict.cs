@@ -1,50 +1,22 @@
 ﻿namespace Importer;
 
 using System.Diagnostics;
-using System.IO.Compression;
 using System.Xml;
 
-public struct JMDict : IDisposable
+public static class JMDict
 {
-	const string SourceFile = "JMdict.gz";
-
-	/// <summary>
-	/// Size of the source file.
-	/// </summary>
-	public long Size { get; init; }
-
-	private readonly XmlReader _xml;
-
-	private JMDict(FileStream input)
+	public readonly struct Entry
 	{
-		this.Size = input.Length;
-
-		var unzip = new GZipStream(input, CompressionMode.Decompress);
-
-		var xmlSettings = new XmlReaderSettings();
-		xmlSettings.DtdProcessing = DtdProcessing.Parse;
-
-		this._xml = XmlReader.Create(unzip, xmlSettings);
+		public string Sequence { get; init; }
 	}
 
-	/// <summary>
-	/// Opens the default file.
-	/// </summary>
-	public static JMDict Open()
+	public static XmlReader Open()
 	{
-		var inputFile = Util.OpenFile(SourceFile);
-		return new JMDict(inputFile);
+		return Data.OpenXmlZip("JMdict.gz");
 	}
 
-	public void Dispose()
+	public static IEnumerable<Entry> ReadEntries(XmlReader xml)
 	{
-		this._xml.Dispose();
-	}
-
-	public IEnumerable<Entry> ReadEntries()
-	{
-		var xml = this._xml;
-
 		while (xml.Read())
 		{
 			switch (xml.NodeType)
@@ -52,19 +24,14 @@ public struct JMDict : IDisposable
 				case XmlNodeType.Element:
 					if (xml.LocalName == TagEntry)
 					{
-						yield return this.ReadEntry(xml);
+						yield return ReadEntry(xml);
 					}
 					break;
 			}
 		}
 	}
 
-	public readonly struct Entry
-	{
-		public string Sequence { get; init; }
-	}
-
-	private Entry ReadEntry(XmlReader xml)
+	private static Entry ReadEntry(XmlReader xml)
 	{
 		bool parsing = true;
 
@@ -96,6 +63,10 @@ public struct JMDict : IDisposable
 		return new Entry { Sequence = sequence };
 	}
 
+	#region Schema
+
 	const string TagEntry = "entry";
 	const string TagEntrySequence = "ent_seq";
+
+	#endregion
 }

@@ -1,15 +1,32 @@
 namespace Importer;
 
-internal static class Util
+using System.IO.Compression;
+using System.Xml;
+
+internal static class Data
 {
 	/// <summary>
 	/// This is the directory in the project that contains the data files to
 	/// import.
 	/// </summary>
-	public const string DataDirectory = "source-data";
+	public const string SourceDirectory = "source-data";
 
 	/// <summary>
-	/// Opens a file from the import data directory <see cref="DataDirectory"/>.
+	/// Helper to <see cref="OpenFile"/> a gzip XML file.
+	/// </summary>
+	public static XmlReader OpenXmlZip(string fileName)
+	{
+		var input = OpenFile(fileName);
+		var unzip = new GZipStream(input, CompressionMode.Decompress);
+
+		var settings = new XmlReaderSettings();
+		settings.DtdProcessing = DtdProcessing.Parse;
+
+		return XmlReader.Create(unzip, settings);
+	}
+
+	/// <summary>
+	/// Opens a file from the data directory <see cref="SourceDirectory"/>.
 	/// </summary>
 	///
 	/// <remarks>
@@ -40,7 +57,7 @@ internal static class Util
 		var currentDir = baseDir;
 		while (true)
 		{
-			var dataDirectory = Path.Join(currentDir, DataDirectory);
+			var dataDirectory = Path.Join(currentDir, SourceDirectory);
 			if (Directory.Exists(dataDirectory))
 			{
 				var filePath = Path.Join(dataDirectory, fileName);
@@ -50,7 +67,7 @@ internal static class Util
 			var parentDir = Path.GetFullPath(Path.Join(currentDir, ".."));
 			if (parentDir == currentDir)
 			{
-				throw new DirectoryNotFoundException(String.Format("could not find the data directory (`{0}` is missing -- {1})", DataDirectory, Directory.GetCurrentDirectory()));
+				throw new DirectoryNotFoundException(String.Format("could not find the data directory (`{0}` is missing -- {1})", SourceDirectory, Directory.GetCurrentDirectory()));
 			}
 			currentDir = parentDir;
 		}

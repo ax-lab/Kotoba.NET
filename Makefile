@@ -8,3 +8,6 @@ run:
 
 test:
 	@dotnet test
+
+import:
+	@dotnet run --project Importer.CLI -- import ./source-data ./data

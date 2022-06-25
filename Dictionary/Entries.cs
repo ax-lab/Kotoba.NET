@@ -11,7 +11,7 @@ public static class Entries
 			using (var cmd = db.CreateCommand("SELECT * FROM entries WHERE sequence = $sequence"))
 			{
 				cmd.Parameters.AddWithValue("$sequence", id);
-				return db.QueryRows(cmd).FirstOrDefault();
+				return db.QueryEntries(cmd).FirstOrDefault();
 			}
 		}
 	}

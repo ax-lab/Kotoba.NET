@@ -8,6 +8,20 @@ public class EntriesWriter : DatabaseWriter
 			CREATE TABLE IF NOT EXISTS entries (
 				sequence INTEGER PRIMARY KEY
 			);
+
+			CREATE TABLE IF NOT EXISTS entries_kanji(
+				sequence INTEGER,
+				position INTEGER,
+				text     TEXT,
+				PRIMARY KEY(sequence ASC, position ASC)
+			) WITHOUT ROWID;
+
+			CREATE TABLE IF NOT EXISTS entries_reading(
+				sequence INTEGER,
+				position INTEGER,
+				text     TEXT,
+				PRIMARY KEY(sequence ASC, position ASC)
+			) WITHOUT ROWID;
 		");
 	}
 
@@ -20,24 +34,90 @@ public class EntriesWriter : DatabaseWriter
 	{
 		using (var trans = this.db.BeginTransaction())
 		{
-			using (var cmd = this.db.CreateCommand())
+			using (var cmdInsertEntry = this.db.CreateCommand())
 			{
-				cmd.CommandText = @"
+				cmdInsertEntry.CommandText = @"
 					INSERT INTO entries(sequence) VALUES ($sequence)
 				";
 
-				var sequence = cmd.CreateParameter();
+				var sequence = cmdInsertEntry.CreateParameter();
 				sequence.ParameterName = "$sequence";
-				cmd.Parameters.Add(sequence);
+				cmdInsertEntry.Parameters.Add(sequence);
 
 				foreach (var entry in entries)
 				{
 					sequence.Value = entry.Sequence;
-					cmd.ExecuteNonQuery();
+					cmdInsertEntry.ExecuteNonQuery();
 				}
-
-				trans.Commit();
 			}
+
+			using (var cmdInsertKanji = this.db.CreateCommand())
+			{
+				cmdInsertKanji.CommandText = @"
+					INSERT INTO entries_kanji(sequence, position, text)
+					VALUES ($sequence, $position, $text)
+				";
+
+				var paramSequence = cmdInsertKanji.CreateParameter();
+				paramSequence.ParameterName = "$sequence";
+				cmdInsertKanji.Parameters.Add(paramSequence);
+
+				var paramPosition = cmdInsertKanji.CreateParameter();
+				paramPosition.ParameterName = "$position";
+				cmdInsertKanji.Parameters.Add(paramPosition);
+
+				var paramText = cmdInsertKanji.CreateParameter();
+				paramText.ParameterName = "$text";
+				cmdInsertKanji.Parameters.Add(paramText);
+
+				foreach (var entry in entries)
+				{
+					paramSequence.Value = entry.Sequence;
+
+					var position = 0;
+					foreach (var kanji in entry.Kanji)
+					{
+						paramPosition.Value = ++position;
+						paramText.Value = kanji.Text;
+						cmdInsertKanji.ExecuteNonQuery();
+					}
+				}
+			}
+
+			using (var cmdInsertReading = this.db.CreateCommand())
+			{
+				cmdInsertReading.CommandText = @"
+					INSERT INTO entries_reading(sequence, position, text)
+					VALUES ($sequence, $position, $text)
+				";
+
+				var paramSequence = cmdInsertReading.CreateParameter();
+				paramSequence.ParameterName = "$sequence";
+				cmdInsertReading.Parameters.Add(paramSequence);
+
+				var paramPosition = cmdInsertReading.CreateParameter();
+				paramPosition.ParameterName = "$position";
+				cmdInsertReading.Parameters.Add(paramPosition);
+
+				var paramText = cmdInsertReading.CreateParameter();
+				paramText.ParameterName = "$text";
+				cmdInsertReading.Parameters.Add(paramText);
+
+				foreach (var entry in entries)
+				{
+					paramSequence.Value = entry.Sequence;
+
+					var position = 0;
+					foreach (var reading in entry.Reading)
+					{
+						paramPosition.Value = ++position;
+						paramText.Value = reading.Text;
+						cmdInsertReading.ExecuteNonQuery();
+					}
+				}
+			}
+
+			trans.Commit();
 		}
 	}
 }

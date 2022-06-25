@@ -10,10 +10,11 @@ public class Entries_ById
 	}
 
 	[Fact]
-	public void loads_entry()
+	public void loads_specific_entry()
 	{
 		var entry = Entries.ById(1264540) ?? throw new Exception("entry not found");
 		Assert.Equal(1264540, entry.Id);
 		Assert.Equal("言葉", entry.Kanji[0].Text);
+		Assert.Equal("ことば", entry.Reading[0].Text);
 	}
 }

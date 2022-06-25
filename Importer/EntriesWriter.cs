@@ -1,4 +1,4 @@
-namespace Importer.CLI;
+namespace Importer;
 
 public class EntriesWriter : DatabaseWriter
 {

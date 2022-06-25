@@ -44,7 +44,7 @@ internal static class Util
 			if (Directory.Exists(dataDirectory))
 			{
 				var filePath = Path.Join(dataDirectory, fileName);
-				return File.Open(filePath, FileMode.Open);
+				return File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 			}
 
 			var parentDir = Path.GetFullPath(Path.Join(currentDir, ".."));

@@ -502,6 +502,7 @@ various information fields.
 ]>
 <!-- JMdict created: 2022-06-24 -->
 <JMdict>
+
 <entry>
   <ent_seq>1000000</ent_seq>
   <r_ele><reb>ヽ</reb></r_ele>
@@ -534,6 +535,7 @@ various information fields.
     <gloss xml:lang="ger">Wiederholungszeichen für Kanji (Laut wird durch Wiederholung manchmal stimmhaft)</gloss>
   </sense>
 </entry>
+
 <entry>
   <ent_seq>1264540</ent_seq>
   <k_ele>
@@ -712,5 +714,46 @@ various information fields.
     <gloss xml:lang="swe">ord</gloss>
   </sense>
 </entry>
+
+<entry>
+  <ent_seq>1003810</ent_seq>
+  <k_ele>
+    <keb>草臥れる</keb>
+    <ke_inf>&ateji;</ke_inf>
+    <ke_pri>ichi1</ke_pri>
+  </k_ele>
+  <r_ele>
+    <reb>くたびれる</reb>
+    <re_pri>ichi1</re_pri>
+  </r_ele>
+  <sense>
+    <pos>&v1;</pos>
+    <pos>&vi;</pos>
+    <misc>&uk;</misc>
+    <gloss>to get tired</gloss>
+    <gloss>to become exhausted</gloss>
+    <gloss>to grow weary</gloss>
+  </sense>
+  <sense>
+    <pos>&v1;</pos>
+    <pos>&vi;</pos>
+    <misc>&uk;</misc>
+    <gloss>to become worn out</gloss>
+    <gloss>to become battered (from long use)</gloss>
+  </sense>
+  <sense>
+    <pos>&aux-v;</pos>
+    <pos>&v1;</pos>
+    <misc>&uk;</misc>
+    <s_inf>after the -masu stem of a verb</s_inf>
+    <gloss>to get tired of (doing)</gloss>
+    <gloss>to get fed up with</gloss>
+  </sense>
+  <sense>
+    <gloss xml:lang="ger">abgetragen sein</gloss>
+    <gloss xml:lang="ger">verbraucht sein</gloss>
+  </sense>
+</entry>
+
 </JMdict>
 ```

@@ -10,7 +10,11 @@
 	],
 	"dictionaryDefinitions": [],
 	"dictionaries": [],
-	"words": ["JLPT", "xunit"],
+	"words": [
+		"JLPT",
+		"ROWID",
+		"xunit"
+	],
 	"ignoreWords": [],
 	"import": []
 }

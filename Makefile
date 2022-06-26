@@ -1,4 +1,4 @@
-.PHONY: build run test
+.PHONY: build run test import watch
 
 build:
 	@dotnet build
@@ -11,3 +11,6 @@ test:
 
 import:
 	@dotnet run --project Importer.CLI -- import ./data
+
+watch:
+	@dotnet watch run --project Kotoba.Web

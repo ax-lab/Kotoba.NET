@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dictionary.Test", "Dictiona
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Importer.CLI", "Importer.CLI\Importer.CLI.csproj", "{CED0A5FB-E0F7-40F8-B958-AF582BDEF2AB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kotoba.Web", "Kotoba.Web\Kotoba.Web.csproj", "{8457EDDB-F78E-4F3A-BA1E-0F78D50510E7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,5 +62,9 @@ Global
 		{CED0A5FB-E0F7-40F8-B958-AF582BDEF2AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CED0A5FB-E0F7-40F8-B958-AF582BDEF2AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CED0A5FB-E0F7-40F8-B958-AF582BDEF2AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8457EDDB-F78E-4F3A-BA1E-0F78D50510E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8457EDDB-F78E-4F3A-BA1E-0F78D50510E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8457EDDB-F78E-4F3A-BA1E-0F78D50510E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8457EDDB-F78E-4F3A-BA1E-0F78D50510E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

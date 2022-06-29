@@ -22,9 +22,12 @@
 			"preLaunchTask": "build",
 			"program": "${workspaceFolder}/Kotoba.Web/bin/Debug/net6.0/Kotoba.Web.exe",
 			"args": [],
-			"cwd": "${workspaceFolder}",
+			"cwd": "${workspaceFolder}/Kotoba.Web",
 			"console": "internalConsole",
-			"stopAtEntry": false
+			"stopAtEntry": false,
+			"env": {
+				"ASPNETCORE_ENVIRONMENT": "Development"
+			}
 		}
 	]
 }

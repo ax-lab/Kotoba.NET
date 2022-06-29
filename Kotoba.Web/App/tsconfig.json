@@ -1,0 +1,27 @@
+{
+	"include": ["src/**/*.ts"],
+
+	"compilerOptions": {
+		// Stylize errors and messages using color and context
+		"pretty": true,
+		// Enable incremental compilation
+		"incremental": true,
+
+		// Redirect output structure to the directory.
+		"outDir": "./build",
+
+		// Specify library files to be included in the compilation.
+		"lib": ["es2017", "dom", "es2019", "es2020"],
+		// Specify list of directories for type definition files to be included.
+		"typeRoots": ["node_modules/@types"],
+
+		// Enable all strict type-checking options.
+		"strict": true,
+		// Report error when not all code paths in function return a value.
+		"noImplicitReturns": true,
+		// Skip type checking of declaration files.
+		"skipLibCheck": true,
+		// Disallow inconsistently-cased references to the same file.
+		"forceConsistentCasingInFileNames": true
+	}
+}

@@ -27,6 +27,7 @@ builder.Services.AddGraphQL(options =>
 	options.AddSystemTextJson();
 	options.AddHttpMiddleware<AppSchema, GraphQLHttpMiddleware<AppSchema>>();
 	options.AddGraphTypes(typeof(AppSchema).Assembly);
+	options.AddErrorInfoProvider(new Graph.CustomErrorInfoProvider(builder.Environment.IsDevelopment()));
 });
 
 // Bind to `0.0.0.0` so that the application can be accessed on the network

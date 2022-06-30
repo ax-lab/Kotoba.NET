@@ -5,17 +5,6 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Lauch CLI (console)",
-			"type": "coreclr",
-			"request": "launch",
-			"preLaunchTask": "build",
-			"program": "${workspaceFolder}/Kotoba.CLI/bin/Debug/net6.0/Kotoba.CLI.exe",
-			"args": [],
-			"cwd": "${workspaceFolder}",
-			"console": "internalConsole",
-			"stopAtEntry": false
-		},
-		{
 			"name": "Lauch Web",
 			"type": "coreclr",
 			"request": "launch",

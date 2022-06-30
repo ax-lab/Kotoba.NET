@@ -1,5 +1,11 @@
 using Microsoft.Extensions.FileProviders;
 
+using GraphQL;
+using GraphQL.MicrosoftDI;
+using GraphQL.Server.Transports.AspNetCore;
+using GraphQL.Server;
+using GraphQL.SystemTextJson;
+
 const int PORT_SSL = 29801;
 const int PORT_HTTP = 29802;
 
@@ -14,6 +20,14 @@ const string PUBLIC_PATH = APP_ROOT + "/public";
 const string BUILD_PATH = APP_ROOT + "/build";
 
 var builder = WebApplication.CreateBuilder();
+
+builder.Services.AddGraphQL(options =>
+{
+	options.AddSchema<AppSchema>();
+	options.AddSystemTextJson();
+	options.AddHttpMiddleware<AppSchema, GraphQLHttpMiddleware<AppSchema>>();
+	options.AddGraphTypes(typeof(AppSchema).Assembly);
+});
 
 // Bind to `0.0.0.0` so that the application can be accessed on the network
 // during development.
@@ -76,6 +90,9 @@ app.MapFallbackToFile("index.html", new StaticFileOptions
 });
 
 // Additional routes:
+
+app.UseGraphQL<AppSchema>();
+app.UseGraphQLGraphiQL();
 
 app.MapGet("/hello", () => "hello world!!!");
 

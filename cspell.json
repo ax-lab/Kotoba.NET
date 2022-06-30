@@ -1,16 +1,9 @@
 {
 	"version": "0.2",
-	"ignorePaths": [
-		"obj",
-		"bin",
-		"*.csproj",
-		"*.sln",
-		"cspell.json",
-		"source-data"
-	],
+	"ignorePaths": ["obj", "bin", "*.csproj", "*.sln", "cspell.json", "source-data"],
 	"dictionaryDefinitions": [],
 	"dictionaries": [],
-	"words": ["JLPT", "kotoba", "ROWID", "xunit"],
+	"words": ["graphiql", "JLPT", "kotoba", "ROWID", "xunit"],
 	"ignoreWords": [],
 	"import": []
 }

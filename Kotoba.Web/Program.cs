@@ -9,17 +9,24 @@ using GraphQL.SystemTextJson;
 const int PORT_SSL = 29801;
 const int PORT_HTTP = 29802;
 
-const string APP_ROOT = "App";
-
 const bool USE_DEV_SERVER = true;
 
-// Path for static files that are served directly.
-const string PUBLIC_PATH = APP_ROOT + "/public";
+// Root path for the web application.
+const string APP_ROOT = "App";
 
-// Path for built files. Those are merged with the public files.
-const string BUILD_PATH = APP_ROOT + "/build";
+// Relative path from `APP_ROOT` for static web files.
+const string PUBLIC_PATH = "public";
+
+// Relative path from `APP_ROOT` for web files that are built by the
+// development tools. In development mode, these files are merged with
+// the `PUBLIC_PATH`.
+const string BUILD_PATH = "build";
 
 var builder = WebApplication.CreateBuilder();
+
+var appRoot = Path.Combine(builder.Environment.ContentRootPath, APP_ROOT);
+var publicPath = Path.Combine(appRoot, PUBLIC_PATH);
+var buildPath = Path.Combine(appRoot, BUILD_PATH);
 
 builder.Services.AddGraphQL(options =>
 {
@@ -40,21 +47,23 @@ builder.WebHost.UseUrls(
 var app = builder.Build();
 
 var isDev = app.Environment.IsDevelopment();
-
 if (isDev)
 {
-	Node.AppRoot = Path.Combine(builder.Environment.ContentRootPath, APP_ROOT);
+	// Make sure this exists, in case we haven't run the web build yet.
+	Directory.CreateDirectory(buildPath);
+
+	Node.AppRoot = appRoot;
 	if (Node.HasPackageJson)
 	{
 		Node.BeginNpmCommand(USE_DEV_SERVER ? "run serve" : "run watch");
 	}
-}
 
-app.Lifetime.ApplicationStarted.Register(() =>
-{
-	app.Logger.LogInformation("Local listener at https://localhost:{0}", PORT_SSL);
-	app.Logger.LogInformation("Local listener at http://localhost:{0}", PORT_HTTP);
-});
+	app.Lifetime.ApplicationStarted.Register(() =>
+	{
+		app.Logger.LogInformation("Local listener at https://localhost:{0}", PORT_SSL);
+		app.Logger.LogInformation("Local listener at http://localhost:{0}", PORT_HTTP);
+	});
+}
 
 app.Lifetime.ApplicationStopping.Register(() =>
 {
@@ -63,13 +72,12 @@ app.Lifetime.ApplicationStopping.Register(() =>
 
 // File routing:
 
-var publicFileProvider = new PhysicalFileProvider(
-	Path.Combine(builder.Environment.ContentRootPath, PUBLIC_PATH));
+var publicFileProvider = new PhysicalFileProvider(publicPath);
 
 IFileProvider fileProvider = isDev
 	? new CompositeFileProvider(
 		publicFileProvider,
-		new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, BUILD_PATH)))
+		new PhysicalFileProvider(buildPath))
 	: publicFileProvider;
 
 app.UseDefaultFiles(new DefaultFilesOptions
@@ -90,7 +98,9 @@ app.MapFallbackToFile("index.html", new StaticFileOptions
 	FileProvider = publicFileProvider,
 });
 
-// Additional routes:
+//----------------------------------------------------------------------------//
+// Routing and endpoints
+//----------------------------------------------------------------------------//
 
 app.UseGraphQL<AppSchema>();
 app.UseGraphQLGraphiQL();

@@ -24,6 +24,11 @@ internal static class Node
 		npm.StartInfo.RedirectStandardError = true;
 		npm.StartInfo.RedirectStandardOutput = true;
 
+		// Ctrl+C handling in `npm` and `dotnet watch` conflict, causing issues
+		// in the terminal when the application closes the console. This solves
+		// the problem.
+		npm.StartInfo.RedirectStandardInput = true;
+
 		npm.OutputDataReceived += (s, e) =>
 		{
 			if (!String.IsNullOrWhiteSpace(e.Data)) Console.WriteLine("[npm] inf: {0}", e.Data);

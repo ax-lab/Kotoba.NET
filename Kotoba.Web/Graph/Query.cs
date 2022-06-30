@@ -14,7 +14,7 @@ public class Query : ObjectGraphType
 				new QueryArgument<StringGraphType>
 				{
 					Name = "name",
-					Description = "Name to say hello to.",
+					Description = "Name to include in the message.",
 				}
 			),
 			resolve: context =>
@@ -25,5 +25,5 @@ public class Query : ObjectGraphType
 		);
 	}
 
-	public string Hello(string name) => String.Format("Hello {0}!!!", name);
+	public string Hello(string name) => String.Format("Hello, {0}!!!", name);
 }

@@ -13,7 +13,7 @@ import:
 	@dotnet run --project Importer.CLI -- import ./data
 
 watch:
-	@dotnet watch run --no-hot-reload --project Kotoba.Web
+	@DOTNET_WATCH_RESTART_ON_RUDE_EDIT=1 dotnet watch run --project Kotoba.Web
 
 publish:
 	@dotnet publish

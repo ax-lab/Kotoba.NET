@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Importer.CLI", "Importer.CL
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kotoba.Web", "Kotoba.Web\Kotoba.Web.csproj", "{8457EDDB-F78E-4F3A-BA1E-0F78D50510E7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kotoba.Data", "Kotoba.Data\Kotoba.Data.csproj", "{B6751571-C544-4E20-BA60-699226E1FC49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kotoba.Data.Test", "Kotoba.Data.Test\Kotoba.Data.Test.csproj", "{58665270-088E-4DCC-BE81-32A7D17EED33}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,5 +64,13 @@ Global
 		{8457EDDB-F78E-4F3A-BA1E-0F78D50510E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8457EDDB-F78E-4F3A-BA1E-0F78D50510E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8457EDDB-F78E-4F3A-BA1E-0F78D50510E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6751571-C544-4E20-BA60-699226E1FC49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6751571-C544-4E20-BA60-699226E1FC49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6751571-C544-4E20-BA60-699226E1FC49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6751571-C544-4E20-BA60-699226E1FC49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58665270-088E-4DCC-BE81-32A7D17EED33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58665270-088E-4DCC-BE81-32A7D17EED33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58665270-088E-4DCC-BE81-32A7D17EED33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58665270-088E-4DCC-BE81-32A7D17EED33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

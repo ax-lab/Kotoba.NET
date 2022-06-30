@@ -1,20 +1,26 @@
 namespace Dictionary.Test;
 
-public class Entries_ById
+public class EntriesTest
 {
 	[Fact]
-	public void returns_null_for_non_existing_id()
+	public void ById_returns_null_for_inexistent_id()
 	{
 		var entry = Entries.ById(88888888888);
-		Assert.Null(entry);
+		entry.Should().BeNull();
 	}
 
 	[Fact]
-	public void loads_specific_entry()
+	public void ById_returns_entry_with_id()
 	{
 		var entry = Entries.ById(1264540) ?? throw new Exception("entry not found");
-		Assert.Equal(1264540, entry.Id);
-		Assert.Equal("言葉", entry.Kanji[0].Text);
-		Assert.Equal("ことば", entry.Reading[0].Text);
+		entry.Id.Should().Be(1264540);
+		entry.Kanji[0].Text.Should().Be("言葉");
+		entry.Reading[0].Text.Should().Be("ことば");
+	}
+
+	[Fact]
+	public void Count_should_be_greater_than_zero()
+	{
+		Entries.Count.Should().BeGreaterThan(0);
 	}
 }

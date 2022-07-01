@@ -1,5 +1,5 @@
 {
-	"include": ["src/**/*.ts"],
+	"include": ["src/**/*.ts", "src/**/*.tsx"],
 
 	"compilerOptions": {
 		// Stylize errors and messages using color and context
@@ -15,12 +15,16 @@
 		// Specify list of directories for type definition files to be included.
 		"typeRoots": ["node_modules/@types"],
 
+		// Skip type checking of declaration files.
+		"skipLibCheck": true,
+
+		"jsx": "react-jsx",
+		"jsxImportSource": "preact",
+
 		// Enable all strict type-checking options.
 		"strict": true,
 		// Report error when not all code paths in function return a value.
 		"noImplicitReturns": true,
-		// Skip type checking of declaration files.
-		"skipLibCheck": true,
 		// Disallow inconsistently-cased references to the same file.
 		"forceConsistentCasingInFileNames": true
 	}

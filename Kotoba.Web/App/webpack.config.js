@@ -1,7 +1,7 @@
 const path = require('path')
 
 const OUTPUT = path.resolve(__dirname, 'build')
-const APP = './src/app.ts'
+const APP = './src/index.ts'
 
 const config = {
 	mode: 'development',
@@ -14,12 +14,36 @@ const config = {
 					options: {
 						jsc: {
 							target: 'es5',
+							parser: {
+								syntax: 'typescript',
+								tsx: true,
+							},
+							transform: {
+								react: {
+									runtime: 'automatic',
+									pragma: 'h',
+									pragmaFrag: 'Fragment',
+								},
+							},
 						},
 					},
 				},
 				exclude: /node_modules/,
 			},
+			{
+				test: /\.less$/,
+				use: ['style-loader', 'css-loader', 'less-loader'],
+			},
 		],
+	},
+	resolve: {
+		extensions: ['.tsx', '.ts', '.js'],
+		alias: {
+			react: 'preact/compat',
+			'react-dom/test-utils': 'preact/test-utils',
+			'react-dom': 'preact/compat', // Must be below test-utils
+			'react/jsx-runtime': 'preact/jsx-runtime',
+		},
 	},
 }
 
@@ -40,9 +64,6 @@ module.exports = (env, args) => {
 				'/': {
 					target: 'http://localhost:29802',
 				},
-			},
-			devMiddleware: {
-				writeToDisk: true,
 			},
 		},
 	}

@@ -23,6 +23,8 @@ const string PUBLIC_PATH = "public";
 const string BUILD_PATH = "build";
 
 var builder = WebApplication.CreateBuilder();
+var isDev = builder.Environment.IsDevelopment();
+
 
 var appRoot = Path.Combine(builder.Environment.ContentRootPath, APP_ROOT);
 var publicPath = Path.Combine(appRoot, PUBLIC_PATH);
@@ -30,11 +32,17 @@ var buildPath = Path.Combine(appRoot, BUILD_PATH);
 
 builder.Services.AddGraphQL(options =>
 {
-	options.AddSchema<AppSchema>();
+	options.AddHttpMiddleware<Kotoba.Data.Schema, GraphQLHttpMiddleware<Kotoba.Data.Schema>>();
+	options.AddSchema(new Kotoba.Data.Schema());
+	options.ConfigureExecutionOptions(exec =>
+	{
+		exec.EnableMetrics = isDev;
+	});
 	options.AddSystemTextJson();
-	options.AddHttpMiddleware<AppSchema, GraphQLHttpMiddleware<AppSchema>>();
-	options.AddGraphTypes(typeof(AppSchema).Assembly);
-	options.AddErrorInfoProvider(new Graph.CustomErrorInfoProvider(builder.Environment.IsDevelopment()));
+	if (isDev)
+	{
+		options.AddErrorInfoProvider(new Kotoba.Data.DetailedErrorInfoProvider());
+	}
 });
 
 // Bind to `0.0.0.0` so that the application can be accessed on the network
@@ -46,7 +54,6 @@ builder.WebHost.UseUrls(
 
 var app = builder.Build();
 
-var isDev = app.Environment.IsDevelopment();
 if (isDev)
 {
 	// Make sure this exists, in case we haven't run the web build yet.
@@ -102,7 +109,7 @@ app.MapFallbackToFile("index.html", new StaticFileOptions
 // Routing and endpoints
 //----------------------------------------------------------------------------//
 
-app.UseGraphQL<AppSchema>();
+app.UseGraphQL<Kotoba.Data.Schema>();
 app.UseGraphQLGraphiQL();
 
 app.MapGet("/hello", () => "hello world!!!");

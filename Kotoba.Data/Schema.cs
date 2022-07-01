@@ -6,7 +6,8 @@ public class Schema : GraphQL.Types.Schema
 {
 	public Schema()
 	{
-		Query = new QueryType();
+		Query = new Query();
+		this.RegisterTypeMapping<QueryEntries, QueryEntriesType>();
 	}
 
 	public static async Task<string> Execute(string query)
@@ -17,7 +18,6 @@ public class Schema : GraphQL.Types.Schema
 		return await schema.ExecuteAsync(writer, options =>
 		{
 			options.Query = query;
-			options.Root = new Query();
 		});
 	}
 }

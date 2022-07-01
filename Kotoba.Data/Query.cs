@@ -1,20 +1,16 @@
 namespace Kotoba.Data;
 
-using GraphQL;
-using GraphQL.Types;
-
-public class Query
+public class Query : ObjectGraphType<Query>
 {
-	public long TotalEntries
+	public Query()
 	{
-		get => Dictionary.Entries.Count;
+		Field(x => x.Entries)
+			.Description("Entrypoint for querying dictionary entries.")
+			.Resolve((_) => this.Entries);
 	}
-}
 
-public class QueryType : ObjectGraphType<Query>
-{
-	public QueryType()
+	public QueryEntries Entries
 	{
-		Field(x => x.TotalEntries).Description("Total number of entries in the dictionary.");
+		get => new QueryEntries();
 	}
 }

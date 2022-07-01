@@ -5,6 +5,7 @@ using GraphQL.MicrosoftDI;
 using GraphQL.Server.Transports.AspNetCore;
 using GraphQL.Server;
 using GraphQL.SystemTextJson;
+using GraphQL.Server.Ui.GraphiQL;
 
 const int PORT_SSL = 29801;
 const int PORT_HTTP = 29802;
@@ -15,20 +16,26 @@ const bool USE_DEV_SERVER = true;
 const string APP_ROOT = "App";
 
 // Relative path from `APP_ROOT` for static web files.
-const string PUBLIC_PATH = "public";
+const string PUBLIC_DIR = "public";
 
 // Relative path from `APP_ROOT` for web files that are built by the
 // development tools. In development mode, these files are merged with
-// the `PUBLIC_PATH`.
-const string BUILD_PATH = "build";
+// the `PUBLIC_DIR` files.
+const string BUILD_DIR = "build";
+
+// URL path to the GraphQL endpoint.
+const string GRAPHQL_PATH = "/api/graphql";
+
+// URL path to the GraphiQL interface.
+const string GRAPHQL_PATH_UI = "/query";
 
 var builder = WebApplication.CreateBuilder();
 var isDev = builder.Environment.IsDevelopment();
 
 
 var appRoot = Path.Combine(builder.Environment.ContentRootPath, APP_ROOT);
-var publicPath = Path.Combine(appRoot, PUBLIC_PATH);
-var buildPath = Path.Combine(appRoot, BUILD_PATH);
+var publicPath = Path.Combine(appRoot, PUBLIC_DIR);
+var buildPath = Path.Combine(appRoot, BUILD_DIR);
 
 builder.Services.AddGraphQL(options =>
 {
@@ -109,8 +116,11 @@ app.MapFallbackToFile("index.html", new StaticFileOptions
 // Routing and endpoints
 //----------------------------------------------------------------------------//
 
-app.UseGraphQL<Kotoba.Data.Schema>();
-app.UseGraphQLGraphiQL();
+app.UseGraphQL<Kotoba.Data.Schema>(GRAPHQL_PATH);
+app.UseGraphQLGraphiQL(new GraphiQLOptions
+{
+	GraphQLEndPoint = GRAPHQL_PATH,
+}, GRAPHQL_PATH_UI);
 
 app.MapGet("/hello", () => "hello world!!!");
 

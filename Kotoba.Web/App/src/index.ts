@@ -15,5 +15,6 @@ function init() {
 
 console.log('INIT!');
 
+void graphql.query('{ entries { count } }').then((x) => console.log(x));
 
 init();

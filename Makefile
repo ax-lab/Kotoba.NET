@@ -1,4 +1,4 @@
-.PHONY: build run test import watch publish check
+.PHONY: build run test import watch publish check clear-data
 
 build:
 	@dotnet build
@@ -10,7 +10,7 @@ test:
 	@dotnet test --nologo -v quiet
 	@npm --prefix Kotoba.Web/App test
 
-import:
+import: clear-data
 	@dotnet run --project Importer.CLI -- import ./data
 
 watch:
@@ -21,3 +21,6 @@ publish:
 
 check:
 	@npm --prefix Kotoba.Web/App run check
+
+clear-data:
+	rm -f data/entries.db

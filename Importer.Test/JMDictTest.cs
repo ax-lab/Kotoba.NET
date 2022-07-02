@@ -1,61 +1,114 @@
-namespace Importer.Test;
-
-public class JMDict_Open
+public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 {
+	private readonly Fixture fixture;
+
+	public JMDictTest(Fixture fixture)
+	{
+		this.fixture = fixture;
+	}
+
 	[Fact]
-	public void should_open_file()
+	public void opens_file()
 	{
 		using (var xml = JMDict.Open())
 		{
-			Assert.NotNull(xml);
-			Assert.True(xml.Read());
+			xml.Should().NotBeNull();
+			xml.Read().Should().BeTrue();
 		}
 	}
 
 	[Fact]
-	public void should_read_entries()
+	public void reads_entries()
 	{
-		using (var xml = JMDict.Open())
+		Check("1000000", x =>
 		{
-			// avoid reading the entire file to keep the test fast
-			var entries = JMDict.ReadEntries(xml).TakeWhile(x => String.Compare(x.Sequence, "1009999") < 0).ToList();
+			x.Reading[0].Text.Should().Be("ヽ");
+		});
 
-			var check = (string id, Action<JMDict.Entry> assertions) =>
-			{
-				var entry = entries.First(x => x.Sequence == id);
-				Assert.Equal(entry.Sequence, id);
-				assertions(entry);
-			};
+		Check("1000040", x =>
+		{
+			x.Reading[0].Text.Should().Be("おなじ");
+			x.Reading[1].Text.Should().Be("おなじく");
+		});
 
-			// first entry in the file
-			check("1000000", x =>
+		Check("1000110", x =>
+		{
+			x.Kanji[0].Text.Should().Be("ＣＤプレーヤー");
+			x.Kanji[1].Text.Should().Be("ＣＤプレイヤー");
+		});
+
+		Check("1003810", x =>
+		{
+			x.Kanji[0].Text.Should().Be("草臥れる");
+		});
+	}
+
+	[Fact]
+	public void reads_sense_glossary()
+	{
+		Check("1000300", x =>
+		{
+			x.Sense[0].Glossary.Select(x => x.Text).Should().Equal("to treat", "to handle", "to deal with");
+		});
+		Check("1000440", x =>
+		{
+			x.Sense[1].Glossary.Select(x => x.Text).Should().Equal("you");
+		});
+	}
+
+	[Fact]
+	public void reads_sense_glossary_language()
+	{
+		Check("1000160", x =>
+		{
+			x.Sense.First(x => x.Lang == "spa").Glossary[0].Text.Should().Be("camiseta");
+		});
+	}
+
+	[Fact]
+	public void reads_sense_glossary_type()
+	{
+		Check("1000020", x =>
+		{
+			x.Sense[0].Glossary[0].Should().Be(new JMDict.Glossary
 			{
-				Assert.Equal(1, x.Reading.Count);
-				Assert.Equal(new JMDict.Reading { Text = "ヽ" }, x.Reading[0]);
+				Type = "expl",
+				Text = "repetition mark in hiragana"
 			});
+		});
+	}
 
-			// entry with multiple readings
-			check("1000040", x =>
-			{
-				Assert.Equal(2, x.Reading.Count);
-				Assert.Equal(new JMDict.Reading { Text = "おなじ" }, x.Reading[0]);
-				Assert.Equal(new JMDict.Reading { Text = "おなじく" }, x.Reading[1]);
-			});
+	private void Check(string id, Action<JMDict.Entry> assertions)
+	{
+		var entry = fixture.Get(id);
+		entry.Sequence.Should().Be(id);
+		assertions(entry);
+	}
 
-			// entry with multiple kanji
-			check("1000110", x =>
-			{
-				Assert.Equal(2, x.Kanji.Count);
-				Assert.Equal(new JMDict.Kanji { Text = "ＣＤプレーヤー" }, x.Kanji[0]);
-				Assert.Equal(new JMDict.Kanji { Text = "ＣＤプレイヤー" }, x.Kanji[1]);
-			});
+	public class Fixture
+	{
+		private readonly Dictionary<string, JMDict.Entry> entries;
 
-			// entry with a kanji with priority and info
-			check("1003810", x =>
+		public Fixture()
+		{
+			using (var xml = JMDict.Open())
 			{
-				Assert.Equal(1, x.Kanji.Count);
-				Assert.Equal(new JMDict.Kanji { Text = "草臥れる" }, x.Kanji[0]);
-			});
+				// avoid reading the entire file to keep the tests fast
+				entries = JMDict
+					.ReadEntries(xml)
+					.TakeWhile(x => String.Compare(x.Sequence, "1009999") < 0)
+					.ToDictionary(x => x.Sequence);
+			}
+		}
+
+		public JMDict.Entry Get(string id)
+		{
+			JMDict.Entry? entry;
+			if (entries.TryGetValue(id, out entry))
+			{
+				return entry;
+			}
+			throw new KeyNotFoundException(String.Format("Entry {0} not found in the test fixture", id));
 		}
 	}
 }

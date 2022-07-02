@@ -14,6 +14,8 @@ using System.Xml;
 /// </remarks>
 public static class JMDict
 {
+	private const string XmlNamespace = "http://www.w3.org/XML/1998/namespace";
+
 	public record Entry
 	{
 		public string Sequence { get; internal set; } = "";
@@ -21,6 +23,8 @@ public static class JMDict
 		public IList<Kanji> Kanji { get; } = new List<Kanji>();
 
 		public IList<Reading> Reading { get; } = new List<Reading>();
+
+		public IList<Sense> Sense { get; } = new List<Sense>();
 	}
 
 	public record Reading
@@ -30,6 +34,39 @@ public static class JMDict
 
 	public record Kanji
 	{
+		public string Text { get; internal set; } = "";
+	}
+
+	public record Sense
+	{
+		public string Lang { get; internal set; } = "eng";
+
+		/// <summary>
+		/// Returns if the sense is completely empty.
+		/// </summary>
+		/// <remarks>
+		/// This is used to filter out empty senses that are present in the
+		/// source data.
+		/// </remarks>
+		public bool IsEmpty
+		{
+			get
+			{
+				var count = 0;
+				count += Glossary.Count;
+				return count == 0;
+			}
+		}
+
+		public IList<Glossary> Glossary { get; } = new List<Glossary>();
+	}
+
+	public record Glossary
+	{
+		public string Lang { get; internal set; } = "eng";
+
+		public string Type { get; internal set; } = "";
+
 		public string Text { get; internal set; } = "";
 	}
 
@@ -79,11 +116,15 @@ public static class JMDict
 							break;
 
 						case TagEntryKanji:
-							entry.Kanji.Add(ParseKanji(xml));
+							entry.Kanji.Add(ParseKanji(xml.ReadSubtree()));
 							break;
 
 						case TagEntryReading:
-							entry.Reading.Add(ParseReading(xml));
+							entry.Reading.Add(ParseReading(xml.ReadSubtree()));
+							break;
+
+						case TagEntrySense:
+							entry.Sense.Add(ParseSense(xml.ReadSubtree()));
 							break;
 					}
 					break;
@@ -98,21 +139,11 @@ public static class JMDict
 
 	private static Kanji ParseKanji(XmlReader xml)
 	{
-		bool parsing = true;
-
 		var kanji = new Kanji { };
-
-		while (parsing && xml.Read())
+		while (xml.Read())
 		{
 			switch (xml.NodeType)
 			{
-				case XmlNodeType.EndElement:
-					if (xml.LocalName == TagEntryKanji)
-					{
-						parsing = false;
-					}
-					break;
-
 				case XmlNodeType.Element:
 					switch (xml.LocalName)
 					{
@@ -130,21 +161,11 @@ public static class JMDict
 
 	private static Reading ParseReading(XmlReader xml)
 	{
-		bool parsing = true;
-
 		var reading = new Reading { };
-
-		while (parsing && xml.Read())
+		while (xml.Read())
 		{
 			switch (xml.NodeType)
 			{
-				case XmlNodeType.EndElement:
-					if (xml.LocalName == TagEntryReading)
-					{
-						parsing = false;
-					}
-					break;
-
 				case XmlNodeType.Element:
 					switch (xml.LocalName)
 					{
@@ -160,6 +181,46 @@ public static class JMDict
 		return reading;
 	}
 
+	private static Sense ParseSense(XmlReader xml)
+	{
+		var sense = new Sense { };
+		while (xml.Read())
+		{
+			switch (xml.NodeType)
+			{
+				case XmlNodeType.Element:
+					if (xml.LocalName == TagEntrySenseGlossary)
+					{
+						var glossary = ParseSenseGlossary(xml);
+						if (sense.Glossary.Count == 0)
+						{
+							sense.Lang = glossary.Lang;
+						}
+						else
+						{
+							Debug.Assert(sense.Lang == glossary.Lang);
+						}
+						sense.Glossary.Add(glossary);
+					}
+					break;
+			}
+		}
+		return sense;
+	}
+
+	private static Glossary ParseSenseGlossary(XmlReader xml)
+	{
+		var glossary = new Glossary { };
+		var lang = xml.GetAttribute("lang", XmlNamespace);
+		if (!String.IsNullOrEmpty(lang))
+		{
+			glossary.Lang = lang;
+		}
+		glossary.Type = xml.GetAttribute("g_type") ?? "";
+		glossary.Text = xml.ReadElementContentAsString();
+		return glossary;
+	}
+
 	#region Schema
 
 	const string TagEntry = "entry";
@@ -167,17 +228,14 @@ public static class JMDict
 
 	const string TagEntryKanji = "k_ele";
 	const string TagEntryKanjiText = "keb";
-	const string TagEntryKanjiPriority = "ke_pri";
-	const string TagEntryKanjiInfo = "ke_inf";
 
 	// spell-checker: ignore nokanji, restr
 
 	const string TagEntryReading = "r_ele";
 	const string TagEntryReadingText = "reb";
-	const string TagEntryReadingInfo = "re_inf";
-	const string TagEntryReadingPriority = "re_pri";
-	const string TagEntryReadingNoKanji = "re_nokanji";
-	const string TagEntryReadingRestriction = "re_restr";
+
+	const string TagEntrySense = "sense";
+	const string TagEntrySenseGlossary = "gloss";
 
 	#endregion
 }

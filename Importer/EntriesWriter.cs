@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Importer;
 
 public class EntriesWriter : DatabaseWriter
@@ -20,6 +22,13 @@ public class EntriesWriter : DatabaseWriter
 				sequence INTEGER,
 				position INTEGER,
 				text     TEXT,
+				PRIMARY KEY(sequence ASC, position ASC)
+			) WITHOUT ROWID;
+
+			CREATE TABLE IF NOT EXISTS entries_sense(
+				sequence INTEGER,
+				position INTEGER,
+				glossary TEXT,
 				PRIMARY KEY(sequence ASC, position ASC)
 			) WITHOUT ROWID;
 		");
@@ -113,6 +122,54 @@ public class EntriesWriter : DatabaseWriter
 						paramPosition.Value = ++position;
 						paramText.Value = reading.Text;
 						cmdInsertReading.ExecuteNonQuery();
+					}
+				}
+			}
+
+			using (var cmdInsertSense = this.db.CreateCommand())
+			{
+				cmdInsertSense.CommandText = @"
+					INSERT INTO entries_sense(sequence, position, glossary)
+					VALUES ($sequence, $position, $glossary)
+				";
+
+				var paramSequence = cmdInsertSense.CreateParameter();
+				paramSequence.ParameterName = "$sequence";
+				cmdInsertSense.Parameters.Add(paramSequence);
+
+				var paramPosition = cmdInsertSense.CreateParameter();
+				paramPosition.ParameterName = "$position";
+				cmdInsertSense.Parameters.Add(paramPosition);
+
+				var paramGlossary = cmdInsertSense.CreateParameter();
+				paramGlossary.ParameterName = "$glossary";
+				cmdInsertSense.Parameters.Add(paramGlossary);
+
+				foreach (var entry in entries)
+				{
+					paramSequence.Value = entry.Sequence;
+
+					var position = 0;
+					var glossaryText = new StringBuilder();
+					var filteredSenses = entry.Sense.Where(x => x.Lang == "eng" && !x.IsEmpty);
+					foreach (var sense in filteredSenses)
+					{
+						paramPosition.Value = ++position;
+
+						glossaryText.Clear();
+						foreach (var glossary in sense.Glossary)
+						{
+							if (glossaryText.Length > 0)
+							{
+								glossaryText.Append(Dictionary.EntryDatabase.GLOSSARY_ENTRY_SEPARATOR);
+							}
+							glossaryText.AppendFormat("{0}{1}{2}",
+								glossary.Type,
+								Dictionary.EntryDatabase.GLOSSARY_FIELD_SEPARATOR,
+								glossary.Text);
+						}
+						paramGlossary.Value = glossaryText.ToString();
+						cmdInsertSense.ExecuteNonQuery();
 					}
 				}
 			}

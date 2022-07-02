@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Dictionary.Test" />
+    <InternalsVisibleTo Include="Importer" />
   </ItemGroup>
 
   <ItemGroup>

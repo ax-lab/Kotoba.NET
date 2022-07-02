@@ -4,6 +4,16 @@ using Microsoft.Data.Sqlite;
 
 public class EntryDatabase : Database
 {
+	/// <summary>
+	/// Separator for glossary entries in the sense table.
+	/// </summary>
+	internal const string GLOSSARY_ENTRY_SEPARATOR = ";;";
+
+	/// <summary>
+	/// Separator for glossary fields within a glossary.
+	/// </summary>
+	internal const string GLOSSARY_FIELD_SEPARATOR = "::";
+
 	internal EntryDatabase() : base("entries.db")
 	{
 	}
@@ -18,11 +28,13 @@ public class EntryDatabase : Database
 				var sequence = reader.GetInt64(colSequence);
 				var kanji = this.GetEntryKanji(sequence);
 				var reading = this.GetEntryReading(sequence);
+				var sense = this.GetEntrySense(sequence);
 				yield return new Entry
 				{
 					Id = sequence,
 					Kanji = kanji,
 					Reading = reading,
+					Sense = sense,
 				};
 			}
 		}
@@ -62,6 +74,41 @@ public class EntryDatabase : Database
 					var text = reader.GetString(colText);
 					var reading = new EntryReading { Text = text };
 					output.Add(reading);
+				}
+			}
+		}
+		return output;
+	}
+
+	private List<EntrySense> GetEntrySense(long sequence)
+	{
+		var output = new List<EntrySense>();
+		using (var command = this.CreateCommand("SELECT * FROM entries_sense WHERE sequence = $sequence ORDER BY position"))
+		{
+			command.Parameters.AddWithValue("$sequence", sequence);
+			using (var reader = command.ExecuteReader())
+			{
+				var colText = reader.GetOrdinal("glossary");
+				while (reader.Read())
+				{
+					var glossary = reader.GetString(colText)
+						.Split(GLOSSARY_ENTRY_SEPARATOR, StringSplitOptions.RemoveEmptyEntries)
+						.Select(x =>
+						{
+							var fields = x.Split(GLOSSARY_FIELD_SEPARATOR, 2);
+							var glossary = new EntrySenseGlossary
+							{
+								Type = fields[0],
+								Text = fields[1],
+							};
+							return glossary;
+						})
+						.ToList();
+					var sense = new EntrySense
+					{
+						Glossary = glossary,
+					};
+					output.Add(sense);
 				}
 			}
 		}

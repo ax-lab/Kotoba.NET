@@ -1,3 +1,5 @@
-const App = () => <h1>Hello world!!!</h1>
+import Header from './Header'
+
+const App = () => <Header />
 
 export default App

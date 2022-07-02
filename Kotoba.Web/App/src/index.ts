@@ -1,5 +1,6 @@
-import 'preact/devtools'
-import { h, render } from 'preact'
+import 'preact/debug'
+
+import { render } from 'preact'
 import App from './App'
 
 import './css/main.less'

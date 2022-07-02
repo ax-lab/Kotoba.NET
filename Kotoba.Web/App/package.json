@@ -8,10 +8,11 @@
 		"watch": "webpack watch",
 		"serve": "run-s serve:*",
 		"serve:kill": "kill-port 29899",
-		"serve:open": "webpack serve --env server --mode development --hot"
+		"serve:open": "webpack serve --env server --mode development"
 	},
 	"license": "MIT",
 	"devDependencies": {
+		"@prefresh/webpack": "^3.3.4",
 		"@swc/core": "^1.2.207",
 		"css-loader": "^6.7.1",
 		"kill-port": "^2.0.1",

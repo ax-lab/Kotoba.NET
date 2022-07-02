@@ -3,8 +3,11 @@ const path = require('path')
 const OUTPUT = path.resolve(__dirname, 'build')
 const APP = './src/index.ts'
 
+const PreactRefreshPlugin = require('@prefresh/webpack')
+
 const config = {
 	mode: 'development',
+	plugins: [new PreactRefreshPlugin()],
 	module: {
 		rules: [
 			{
@@ -59,6 +62,7 @@ module.exports = (env, args) => {
 		},
 		devServer: {
 			host: '0.0.0.0',
+			hot: true,
 			port: 29899,
 			proxy: {
 				'/': {

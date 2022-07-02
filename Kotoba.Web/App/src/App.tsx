@@ -1,5 +1,5 @@
-import Header from './Header'
+import Header from './Header';
 
-const App = () => <Header />
+const App = () => <Header />;
 
-export default App
+export default App;

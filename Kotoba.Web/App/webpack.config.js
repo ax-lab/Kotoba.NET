@@ -1,9 +1,9 @@
-const path = require('path')
+const path = require('path');
 
-const OUTPUT = path.resolve(__dirname, 'build')
-const APP = './src/index.ts'
+const OUTPUT = path.resolve(__dirname, 'build');
+const APP = './src/index.ts';
 
-const PreactRefreshPlugin = require('@prefresh/webpack')
+const PreactRefreshPlugin = require('@prefresh/webpack');
 
 const config = {
 	mode: 'development',
@@ -16,7 +16,7 @@ const config = {
 					loader: 'swc-loader',
 					options: {
 						jsc: {
-							target: 'es5',
+							target: 'es2015',
 							parser: {
 								syntax: 'typescript',
 								tsx: true,
@@ -48,10 +48,10 @@ const config = {
 			'react/jsx-runtime': 'preact/jsx-runtime',
 		},
 	},
-}
+};
 
 module.exports = (env, args) => {
-	const { server = false } = env || {}
+	const { server = false } = env || {};
 	const app = {
 		entry: server ? ['webpack-dev-server/client', APP] : APP,
 		devtool: args.mode == 'production' ? undefined : 'inline-source-map',
@@ -70,7 +70,7 @@ module.exports = (env, args) => {
 				},
 			},
 		},
-	}
+	};
 
-	return Object.assign({}, config, app)
-}
+	return Object.assign({}, config, app);
+};

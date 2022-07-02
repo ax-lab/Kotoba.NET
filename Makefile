@@ -1,4 +1,4 @@
-.PHONY: build run test import watch publish
+.PHONY: build run test import watch publish check
 
 build:
 	@dotnet build
@@ -7,7 +7,8 @@ run:
 	@dotnet run --project Kotoba.Web
 
 test:
-	@dotnet test
+	@dotnet test --nologo -v quiet
+	@npm --prefix Kotoba.Web/App test
 
 import:
 	@dotnet run --project Importer.CLI -- import ./data
@@ -17,3 +18,6 @@ watch:
 
 publish:
 	@dotnet publish
+
+check:
+	@npm --prefix Kotoba.Web/App run check

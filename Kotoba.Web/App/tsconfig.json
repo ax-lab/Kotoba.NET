@@ -23,9 +23,6 @@
 
 		// Enable all strict type-checking options.
 		"strict": true,
-		// Report error when not all code paths in function return a value.
-		"noImplicitReturns": true,
-		// Disallow inconsistently-cased references to the same file.
 		"forceConsistentCasingInFileNames": true
 	}
 }

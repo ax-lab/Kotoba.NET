@@ -49,10 +49,16 @@ public class EntryDatabase : Database
 			using (var reader = command.ExecuteReader())
 			{
 				var colText = reader.GetOrdinal("text");
+				var colPriority = reader.GetOrdinal("priority");
 				while (reader.Read())
 				{
 					var text = reader.GetString(colText);
-					var kanji = new EntryKanji { Text = text };
+					var priority = reader.GetString(colPriority);
+					var kanji = new EntryKanji
+					{
+						Text = text,
+						Priority = priority.Split(",", StringSplitOptions.RemoveEmptyEntries),
+					};
 					output.Add(kanji);
 				}
 			}
@@ -69,10 +75,16 @@ public class EntryDatabase : Database
 			using (var reader = command.ExecuteReader())
 			{
 				var colText = reader.GetOrdinal("text");
+				var colPriority = reader.GetOrdinal("priority");
 				while (reader.Read())
 				{
 					var text = reader.GetString(colText);
-					var reading = new EntryReading { Text = text };
+					var priority = reader.GetString(colPriority);
+					var reading = new EntryReading
+					{
+						Text = text,
+						Priority = priority.Split(",", StringSplitOptions.RemoveEmptyEntries),
+					};
 					output.Add(reading);
 				}
 			}

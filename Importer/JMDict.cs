@@ -2,7 +2,79 @@
 
 using System;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Xml;
+
+/*
+
+	Priority of entries
+	===================
+
+	The priority of kanji and reading elements is given by the `<ke_pri>` and
+	`<re_pri>` elements in the XML data. Possible values are documented in the
+	file header, but here is a summary:
+
+	- news1/2: first and last 12,000 words frequency compiled by Alexandre Girardi
+	from the `Mainichi Shinbun`.
+
+	- ichi1/2: appears in the `Ichimango goi bunruishuu` from 1998. The ichi2
+	entries were demoted due to low observed frequency.
+
+	- spec1/2: small number of words detected as common but not appearing in
+	other lists.
+
+	- gai1/2: common loanwords, based on the frequency file.
+
+	- nfXX: indicator of frequency-of-use ranking in the word frequency file,
+	where `XX` is the number of the set of 500 words in which the entry can
+	be found, starting at `01`.
+
+	Entries with `news1`, `ichi1`, `spec1`, `spec2`, and `gai1` are marked as
+	popular in EDICT files.
+
+	Sorting of entries
+	==================
+
+	We use the priority tags in conjunction with frequency data to sort entries
+	by popularity. Tags take priority, since the frequency meaning is a lot
+	fuzzier and lacks the context necessary to properly associate entries with
+	their frequency.
+
+	Entries in the input file are stably sorted, considering tags in the
+	following order:
+
+	- Popular entries (any of `news1`, `ichi1`, `spec1`, `spec2`, and `gai1`).
+	- Entries with `nfXX` tags, sorted by their group number. This is also used
+	as a tie-breaker for popular entries.
+	- Other priority tags in order: `spec2`, `news2`, `gai2`, `ichi2`.
+	- Entries with any frequency information at all.
+
+	Within groups, the frequency information is used as a tie-breaker where
+	available.
+
+	Frequency information is divided by reliability. Frequency for an entry
+	is considered reliable if:
+
+	- It matches the kanji element of an entry;
+	- Or it matches the reading element of an entry with `<misc>&uk;</misc>`
+	in their sense elements.
+
+	Entries with `uk` denote words that are usually written as kana, even if
+	they have a kanji writing.
+
+	Entries with reliable frequency take precedence, regardless of their
+	value. Unreliable frequency is used as a last tie-breaker.
+
+	For sorting purposes, frequency and priority for any given entry are taken
+	from the highest value between the reading and kanji elements.
+
+	Finally, after all other factors are considered, the entries are then
+	sorted by the kanji/reading elements. We prioritize "usually kana" elements,
+	and then sort by either the reading or kanji.
+
+*/
+
+
 
 /// <summary>
 /// Support for parsing the XML for the <c>JMDict</c> data.
@@ -30,11 +102,15 @@ public static class JMDict
 	public record Reading
 	{
 		public string Text { get; internal set; } = "";
+
+		public IList<string> Priority { get; } = new List<string>();
 	}
 
 	public record Kanji
 	{
 		public string Text { get; internal set; } = "";
+
+		public IList<string> Priority { get; } = new List<string>();
 	}
 
 	public record Sense
@@ -150,6 +226,9 @@ public static class JMDict
 						case TagEntryKanjiText:
 							kanji.Text = xml.ReadElementContentAsString();
 							break;
+						case TagEntryKanjiPriority:
+							kanji.Priority.Add(ReadPriority(xml));
+							break;
 					}
 					break;
 			}
@@ -172,6 +251,9 @@ public static class JMDict
 						case TagEntryReadingText:
 							reading.Text = xml.ReadElementContentAsString();
 							break;
+						case TagEntryReadingPriority:
+							reading.Priority.Add(ReadPriority(xml));
+							break;
 					}
 					break;
 			}
@@ -179,6 +261,15 @@ public static class JMDict
 
 		Debug.Assert(!String.IsNullOrEmpty(reading.Text), "Reading text is empty");
 		return reading;
+	}
+
+	private static readonly Regex rePriority = new Regex(@"^(news[12]|ichi[12]|spec[12]|gai[12]|nf\d{2})$");
+
+	private static string ReadPriority(XmlReader xml)
+	{
+		var priority = xml.ReadElementContentAsString();
+		Debug.Assert(rePriority.IsMatch(priority));
+		return priority;
 	}
 
 	private static Sense ParseSense(XmlReader xml)
@@ -228,11 +319,13 @@ public static class JMDict
 
 	const string TagEntryKanji = "k_ele";
 	const string TagEntryKanjiText = "keb";
+	const string TagEntryKanjiPriority = "ke_pri";
 
 	// spell-checker: ignore nokanji, restr
 
 	const string TagEntryReading = "r_ele";
 	const string TagEntryReadingText = "reb";
+	const string TagEntryReadingPriority = "re_pri";
 
 	const string TagEntrySense = "sense";
 	const string TagEntrySenseGlossary = "gloss";

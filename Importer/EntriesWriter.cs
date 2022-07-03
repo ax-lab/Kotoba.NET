@@ -6,6 +6,16 @@ public class EntriesWriter : DatabaseWriter
 {
 	public EntriesWriter(string fileName) : base(fileName)
 	{
+		/*
+			A few notes about the database format:
+
+			- The `priority` columns are a CSV list of priorities as documented
+			in the JMDict code.
+
+			- The `glossary` entries are separated by `EntryDatabase.GLOSSARY_ENTRY_SEPARATOR`.
+			- Each `glossary` entry has fields separated by `EntryDatabase.GLOSSARY_FIELD_SEPARATOR`.
+		*/
+
 		this.ExecuteCommand(@"
 			CREATE TABLE IF NOT EXISTS entries (
 				sequence INTEGER PRIMARY KEY
@@ -15,6 +25,7 @@ public class EntriesWriter : DatabaseWriter
 				sequence INTEGER,
 				position INTEGER,
 				text     TEXT,
+				priority TEXT,
 				PRIMARY KEY(sequence ASC, position ASC)
 			) WITHOUT ROWID;
 
@@ -22,6 +33,7 @@ public class EntriesWriter : DatabaseWriter
 				sequence INTEGER,
 				position INTEGER,
 				text     TEXT,
+				priority TEXT,
 				PRIMARY KEY(sequence ASC, position ASC)
 			) WITHOUT ROWID;
 
@@ -63,8 +75,8 @@ public class EntriesWriter : DatabaseWriter
 			using (var cmdInsertKanji = this.db.CreateCommand())
 			{
 				cmdInsertKanji.CommandText = @"
-					INSERT INTO entries_kanji(sequence, position, text)
-					VALUES ($sequence, $position, $text)
+					INSERT INTO entries_kanji(sequence, position, text, priority)
+					VALUES ($sequence, $position, $text, $priority)
 				";
 
 				var paramSequence = cmdInsertKanji.CreateParameter();
@@ -79,6 +91,10 @@ public class EntriesWriter : DatabaseWriter
 				paramText.ParameterName = "$text";
 				cmdInsertKanji.Parameters.Add(paramText);
 
+				var paramPriority = cmdInsertKanji.CreateParameter();
+				paramPriority.ParameterName = "$priority";
+				cmdInsertKanji.Parameters.Add(paramPriority);
+
 				foreach (var entry in entries)
 				{
 					paramSequence.Value = entry.Sequence;
@@ -88,6 +104,7 @@ public class EntriesWriter : DatabaseWriter
 					{
 						paramPosition.Value = ++position;
 						paramText.Value = kanji.Text;
+						paramPriority.Value = String.Join(",", kanji.Priority);
 						cmdInsertKanji.ExecuteNonQuery();
 					}
 				}
@@ -96,8 +113,8 @@ public class EntriesWriter : DatabaseWriter
 			using (var cmdInsertReading = this.db.CreateCommand())
 			{
 				cmdInsertReading.CommandText = @"
-					INSERT INTO entries_reading(sequence, position, text)
-					VALUES ($sequence, $position, $text)
+					INSERT INTO entries_reading(sequence, position, text, priority)
+					VALUES ($sequence, $position, $text, $priority)
 				";
 
 				var paramSequence = cmdInsertReading.CreateParameter();
@@ -112,6 +129,10 @@ public class EntriesWriter : DatabaseWriter
 				paramText.ParameterName = "$text";
 				cmdInsertReading.Parameters.Add(paramText);
 
+				var paramPriority = cmdInsertReading.CreateParameter();
+				paramPriority.ParameterName = "$priority";
+				cmdInsertReading.Parameters.Add(paramPriority);
+
 				foreach (var entry in entries)
 				{
 					paramSequence.Value = entry.Sequence;
@@ -121,6 +142,7 @@ public class EntriesWriter : DatabaseWriter
 					{
 						paramPosition.Value = ++position;
 						paramText.Value = reading.Text;
+						paramPriority.Value = String.Join(",", reading.Priority);
 						cmdInsertReading.ExecuteNonQuery();
 					}
 				}

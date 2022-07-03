@@ -78,6 +78,17 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 		});
 	}
 
+	[Fact]
+	public void reads_priority()
+	{
+		Check("1001670", x =>
+		{
+			x.Kanji[0].Priority.Should().Equal("news1", "nf23");
+			x.Kanji[1].Priority.Should().Equal("ichi2");
+			x.Reading[0].Priority.Should().Equal("ichi2", "news1", "nf23");
+		});
+	}
+
 	private void Check(string id, Action<JMDict.Entry> assertions)
 	{
 		var entry = fixture.Get(id);

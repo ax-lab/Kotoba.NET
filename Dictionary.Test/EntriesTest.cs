@@ -41,6 +41,15 @@ public class EntriesTest
 		entry.Sense.Where(x => x.Glossary.Count == 0).Should().BeEmpty();
 	}
 
+	[Fact]
+	public void should_load_priority()
+	{
+		var entry = GetEntry(1001670);
+		entry.Kanji[0].Priority.Should().Equal("news1", "nf23");
+		entry.Kanji[1].Priority.Should().Equal("ichi2");
+		entry.Reading[0].Priority.Should().Equal("ichi2", "news1", "nf23");
+	}
+
 	private Entry GetEntry(long id)
 	{
 		return Entries.ById(id) ?? throw new Exception(String.Format("entry {0} not found", id));

@@ -14,11 +14,15 @@ public record Entry
 public record EntryKanji
 {
 	public string Text { get; init; } = "";
+
+	public IReadOnlyList<string> Priority { get; init; } = new List<string>();
 }
 
 public record EntryReading
 {
 	public string Text { get; init; } = "";
+
+	public IReadOnlyList<string> Priority { get; init; } = new List<string>();
 }
 
 public record EntrySense

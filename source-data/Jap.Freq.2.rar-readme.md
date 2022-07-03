@@ -1,4 +1,5 @@
-Contains frequency information for Japanese words.
+Contains frequency information for Japanese words. The original RAR file was
+converted to zip to make it easier to load in .NET.
 
 Home: http://www.lexique.org/?page_id=250
 Link: http://worldlex.lexique.org/files/Jap.Freq.2.rar

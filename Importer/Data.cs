@@ -12,9 +12,47 @@ internal static class Data
 	public const string SourceDirectory = "source-data";
 
 	/// <summary>
+	/// Read a compressed text file inside a Zip line by line.
+	/// </summary>
+	/// <param name="zipFileName">Filename to <see cref="OpenFile"/>.</param>
+	/// <param name="innerFile">Text file name, inside the zip file.</param>
+	/// <param name="parser">Line by line parser. Receives the line text and number.</param>
+	public static void ReadZippedLines(string zipFileName, string innerFile, Func<string, long, bool> parser)
+	{
+		using (var input = OpenFile(zipFileName))
+		{
+			using (var zip = new ZipArchive(input, ZipArchiveMode.Read))
+			{
+				var entry = zip.GetEntry(innerFile) ?? throw new FileNotFoundException(
+					String.Format("file {0} not found in {1}", innerFile, zipFileName));
+				using (var reader = new StreamReader(entry.Open()))
+				{
+					var lineCount = 0;
+					while (true)
+					{
+						var next = reader.ReadLine();
+						if (next != null)
+						{
+							if (!parser(next, lineCount))
+							{
+								break;
+							}
+						}
+						else
+						{
+							break;
+						}
+						lineCount++;
+					}
+				}
+			}
+		}
+	}
+
+	/// <summary>
 	/// Helper to <see cref="OpenFile"/> a gzip XML file.
 	/// </summary>
-	public static XmlReader OpenXmlZip(string fileName)
+	public static XmlReader OpenXmlGZip(string fileName)
 	{
 		var input = OpenFile(fileName);
 		var unzip = new GZipStream(input, CompressionMode.Decompress);

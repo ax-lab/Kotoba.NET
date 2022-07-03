@@ -72,7 +72,7 @@ public static class JMDict
 
 	public static XmlReader Open()
 	{
-		return Data.OpenXmlZip("JMdict.gz");
+		return Data.OpenXmlGZip("JMdict.gz");
 	}
 
 	public static IEnumerable<Entry> ReadEntries(XmlReader xml)

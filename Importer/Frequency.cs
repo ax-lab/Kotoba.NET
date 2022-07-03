@@ -95,12 +95,16 @@ public class Frequency
 
 	public static Dictionary<string, long> OpenInnocentCorpus()
 	{
+		const string basePath = "Innocent_Novel_Analysis_120526";
 		var totals = 0L;
 
 		var output = new Dictionary<string, long>();
+
+		// We take the largest entry between the `mecab` and `jparser` files.
+
 		Data.ReadZippedLines(
-			"Innocent_Novel_Analysis_120526.zip",
-			"Innocent_Novel_Analysis_120526/word_freq_report_jparser.txt",
+			basePath + ".zip",
+			basePath + "/word_freq_report_mecab.txt",
 			(line, number) =>
 			{
 				if (!String.IsNullOrWhiteSpace(line))
@@ -110,6 +114,31 @@ public class Frequency
 					var count = Int64.Parse(fields[0]);
 					output.Add(entry, count);
 					totals += count;
+				}
+				return true;
+			});
+
+		Data.ReadZippedLines(
+			basePath + ".zip",
+			basePath + "/word_freq_report_jparser.txt",
+			(line, number) =>
+			{
+				if (!String.IsNullOrWhiteSpace(line))
+				{
+					var fields = line.Split('\t');
+					var entry = fields[1];
+					var count = Int64.Parse(fields[0]);
+
+					long currentValue;
+					if (output.TryGetValue(entry, out currentValue) && count > currentValue)
+					{
+						output[entry] = count;
+						totals += count - currentValue;
+					}
+					else if (output.TryAdd(entry, count))
+					{
+						totals += count;
+					}
 				}
 				return true;
 			});

@@ -1,4 +1,7 @@
+using System;
+using System.Globalization;
 using System.Text;
+using Microsoft.Data.Sqlite;
 
 namespace Importer;
 
@@ -53,6 +56,18 @@ public class EntriesWriter : DatabaseWriter
 				tags_misc TEXT,
 				PRIMARY KEY(sequence ASC, position ASC)
 			) WITHOUT ROWID;
+
+			CREATE TABLE IF NOT EXISTS frequency(
+				entry      TEXT,
+				innocent   INTEGER,
+				blog       INTEGER,
+				news       INTEGER,
+				twitter    INTEGER,
+				blog_pm    TEXT,
+				news_pm    TEXT,
+				twitter_pm TEXT,
+				PRIMARY KEY(entry)
+			) WITHOUT ROWID;
 		");
 	}
 
@@ -61,179 +76,254 @@ public class EntriesWriter : DatabaseWriter
 		get => this.ExecuteScalar<int>("SELECT COUNT(*) FROM entries") > 0;
 	}
 
-	public void InsertEntries(IList<JMDict.Entry> entries, IReadOnlyDictionary<string, string> tags)
+	public record FrequencyData
+	{
+		public Dictionary<string, long>? InnocentCorpus { get; init; }
+		public Dictionary<string, Frequency.WorldLex>? WorldLex { get; init; }
+	}
+
+	public void InsertEntries(
+		IList<JMDict.Entry> entries,
+		IReadOnlyDictionary<string, string> tags,
+		FrequencyData frequency)
 	{
 		using (var trans = this.db.BeginTransaction())
 		{
-			using (var cmdInsertTag = this.db.CreateCommand())
-			{
-				cmdInsertTag.CommandText = @"
-					INSERT INTO tags(name, info) VALUES ($name, $info)
-				";
-
-				var name = cmdInsertTag.CreateParameter();
-				name.ParameterName = "$name";
-				cmdInsertTag.Parameters.Add(name);
-
-				var info = cmdInsertTag.CreateParameter();
-				info.ParameterName = "$info";
-				cmdInsertTag.Parameters.Add(info);
-
-				foreach (var (key, val) in tags)
-				{
-					name.Value = key;
-					info.Value = val;
-					cmdInsertTag.ExecuteNonQuery();
-				}
-			}
-
-			using (var cmdInsertEntry = this.db.CreateCommand())
-			{
-				cmdInsertEntry.CommandText = @"
-					INSERT INTO entries(sequence) VALUES ($sequence)
-				";
-
-				var sequence = cmdInsertEntry.CreateParameter();
-				sequence.ParameterName = "$sequence";
-				cmdInsertEntry.Parameters.Add(sequence);
-
-				foreach (var entry in entries)
-				{
-					sequence.Value = entry.Sequence;
-					cmdInsertEntry.ExecuteNonQuery();
-				}
-			}
-
-			using (var cmdInsertKanji = this.db.CreateCommand())
-			{
-				cmdInsertKanji.CommandText = @"
-					INSERT INTO entries_kanji(sequence, position, text, priority)
-					VALUES ($sequence, $position, $text, $priority)
-				";
-
-				var paramSequence = cmdInsertKanji.CreateParameter();
-				paramSequence.ParameterName = "$sequence";
-				cmdInsertKanji.Parameters.Add(paramSequence);
-
-				var paramPosition = cmdInsertKanji.CreateParameter();
-				paramPosition.ParameterName = "$position";
-				cmdInsertKanji.Parameters.Add(paramPosition);
-
-				var paramText = cmdInsertKanji.CreateParameter();
-				paramText.ParameterName = "$text";
-				cmdInsertKanji.Parameters.Add(paramText);
-
-				var paramPriority = cmdInsertKanji.CreateParameter();
-				paramPriority.ParameterName = "$priority";
-				cmdInsertKanji.Parameters.Add(paramPriority);
-
-				foreach (var entry in entries)
-				{
-					paramSequence.Value = entry.Sequence;
-
-					var position = 0;
-					foreach (var kanji in entry.Kanji)
-					{
-						paramPosition.Value = ++position;
-						paramText.Value = kanji.Text;
-						paramPriority.Value = String.Join(",", kanji.Priority);
-						cmdInsertKanji.ExecuteNonQuery();
-					}
-				}
-			}
-
-			using (var cmdInsertReading = this.db.CreateCommand())
-			{
-				cmdInsertReading.CommandText = @"
-					INSERT INTO entries_reading(sequence, position, text, priority)
-					VALUES ($sequence, $position, $text, $priority)
-				";
-
-				var paramSequence = cmdInsertReading.CreateParameter();
-				paramSequence.ParameterName = "$sequence";
-				cmdInsertReading.Parameters.Add(paramSequence);
-
-				var paramPosition = cmdInsertReading.CreateParameter();
-				paramPosition.ParameterName = "$position";
-				cmdInsertReading.Parameters.Add(paramPosition);
-
-				var paramText = cmdInsertReading.CreateParameter();
-				paramText.ParameterName = "$text";
-				cmdInsertReading.Parameters.Add(paramText);
-
-				var paramPriority = cmdInsertReading.CreateParameter();
-				paramPriority.ParameterName = "$priority";
-				cmdInsertReading.Parameters.Add(paramPriority);
-
-				foreach (var entry in entries)
-				{
-					paramSequence.Value = entry.Sequence;
-
-					var position = 0;
-					foreach (var reading in entry.Reading)
-					{
-						paramPosition.Value = ++position;
-						paramText.Value = reading.Text;
-						paramPriority.Value = String.Join(",", reading.Priority);
-						cmdInsertReading.ExecuteNonQuery();
-					}
-				}
-			}
-
-			using (var cmdInsertSense = this.db.CreateCommand())
-			{
-				cmdInsertSense.CommandText = @"
-					INSERT INTO entries_sense(sequence, position, tags_misc, glossary)
-					VALUES ($sequence, $position, $tags_misc, $glossary)
-				";
-
-				var paramSequence = cmdInsertSense.CreateParameter();
-				paramSequence.ParameterName = "$sequence";
-				cmdInsertSense.Parameters.Add(paramSequence);
-
-				var paramPosition = cmdInsertSense.CreateParameter();
-				paramPosition.ParameterName = "$position";
-				cmdInsertSense.Parameters.Add(paramPosition);
-
-				var paramTagsMisc = cmdInsertSense.CreateParameter();
-				paramTagsMisc.ParameterName = "$tags_misc";
-				cmdInsertSense.Parameters.Add(paramTagsMisc);
-
-				var paramGlossary = cmdInsertSense.CreateParameter();
-				paramGlossary.ParameterName = "$glossary";
-				cmdInsertSense.Parameters.Add(paramGlossary);
-
-				foreach (var entry in entries)
-				{
-					paramSequence.Value = entry.Sequence;
-
-					var position = 0;
-					var glossaryText = new StringBuilder();
-					var filteredSenses = entry.Sense.Where(x => x.Lang == "eng" && !x.IsEmpty);
-					foreach (var sense in filteredSenses)
-					{
-						paramPosition.Value = ++position;
-						paramTagsMisc.Value = String.Join(",", sense.Misc);
-
-						glossaryText.Clear();
-						foreach (var glossary in sense.Glossary)
-						{
-							if (glossaryText.Length > 0)
-							{
-								glossaryText.Append(Dictionary.EntryDatabase.GLOSSARY_ENTRY_SEPARATOR);
-							}
-							glossaryText.AppendFormat("{0}{1}{2}",
-								glossary.Type,
-								Dictionary.EntryDatabase.GLOSSARY_FIELD_SEPARATOR,
-								glossary.Text);
-						}
-						paramGlossary.Value = glossaryText.ToString();
-						cmdInsertSense.ExecuteNonQuery();
-					}
-				}
-			}
+			InsertFrequency(entries, frequency);
+			InsertTags(tags);
+			InsertEntries(entries);
+			InsertKanji(entries);
+			InsertReading(entries);
+			InsertSense(entries);
 
 			trans.Commit();
+		}
+	}
+
+	private void InsertTags(IReadOnlyDictionary<string, string> tags)
+	{
+		using (var cmd = this.db.CreateCommand())
+		{
+			cmd.CommandText = @"INSERT INTO tags(name, info) VALUES ($name, $info)";
+
+			var name = cmd.AddParam("$name");
+			var info = cmd.AddParam("$info");
+
+			foreach (var (key, val) in tags)
+			{
+				name.Value = key;
+				info.Value = val;
+				cmd.ExecuteNonQuery();
+			}
+		}
+	}
+
+	private void InsertFrequency(IList<JMDict.Entry> entries, FrequencyData frequency)
+	{
+		using (var cmd = this.db.CreateCommand())
+		{
+			cmd.CommandText = @"
+				INSERT INTO frequency
+				(entry, innocent, blog, news, twitter, blog_pm, news_pm, twitter_pm)
+				VALUES
+				($entry, $innocent, $blog, $news, $twitter, $blog_pm, $news_pm, $twitter_pm)
+			";
+			var entry = cmd.AddParam("$entry");
+			var innocent = cmd.AddParam("$innocent");
+			var blog = cmd.AddParam("$blog");
+			var news = cmd.AddParam("$news");
+			var twitter = cmd.AddParam("$twitter");
+			var blogPm = cmd.AddParam("$blog_pm");
+			var newsPm = cmd.AddParam("$news_pm");
+			var twitterPm = cmd.AddParam("$twitter_pm");
+
+			var hasEntry = new HashSet<string>();
+			foreach (var itEntry in entries)
+			{
+				foreach (var it in itEntry.Kanji)
+				{
+					hasEntry.Add(it.Text);
+				}
+
+				foreach (var it in itEntry.Reading)
+				{
+					hasEntry.Add(it.Text);
+				}
+			}
+
+			var allEntries = hasEntry.ToList();
+			allEntries.Sort();
+			foreach (var it in allEntries)
+			{
+				var hasData = false;
+
+				entry.Value = it;
+
+				// Get the frequency from innocent corpus:
+				long innocentValue;
+				if (frequency.InnocentCorpus != null && frequency.InnocentCorpus.TryGetValue(it, out innocentValue))
+				{
+					hasData = true;
+					innocent.Value = innocentValue;
+				}
+				else
+				{
+					innocent.Value = DBNull.Value;
+				}
+
+				// Get the frequency from WorldLex:
+				Frequency.WorldLex? worldLex;
+				if (frequency.WorldLex != null && frequency.WorldLex.TryGetValue(it, out worldLex))
+				{
+					hasData = true;
+					blog.Value = worldLex.Blog.Frequency;
+					news.Value = worldLex.News.Frequency;
+					twitter.Value = worldLex.Twitter.Frequency;
+					blogPm.Value = worldLex.Blog.PerMillion.ToString(CultureInfo.InvariantCulture);
+					newsPm.Value = worldLex.News.PerMillion.ToString(CultureInfo.InvariantCulture);
+					twitterPm.Value = worldLex.Twitter.PerMillion.ToString(CultureInfo.InvariantCulture);
+				}
+				else
+				{
+					blog.Value = DBNull.Value;
+					news.Value = DBNull.Value;
+					twitter.Value = DBNull.Value;
+					blogPm.Value = DBNull.Value;
+					newsPm.Value = DBNull.Value;
+					twitterPm.Value = DBNull.Value;
+				}
+
+				if (hasData)
+				{
+					cmd.ExecuteNonQuery();
+				}
+			}
+		}
+	}
+
+	private void InsertEntries(IList<JMDict.Entry> entries)
+	{
+		using (var cmd = this.db.CreateCommand())
+		{
+			cmd.CommandText = @"INSERT INTO entries(sequence) VALUES ($sequence)";
+
+			var sequence = cmd.AddParam("$sequence");
+			foreach (var entry in entries)
+			{
+				sequence.Value = entry.Sequence;
+				cmd.ExecuteNonQuery();
+			}
+		}
+	}
+
+	private void InsertKanji(IList<JMDict.Entry> entries)
+	{
+		using (var cmd = this.db.CreateCommand())
+		{
+			cmd.CommandText = @"
+				INSERT INTO entries_kanji
+					(sequence, position, text, priority)
+				VALUES
+					($sequence, $position, $text, $priority)
+			";
+
+			var sequence = cmd.AddParam("$sequence");
+			var position = cmd.AddParam("$position");
+			var text = cmd.AddParam("$text");
+			var priority = cmd.AddParam("$priority");
+
+			foreach (var entry in entries)
+			{
+				sequence.Value = entry.Sequence;
+
+				var currentPosition = 0;
+				foreach (var kanji in entry.Kanji)
+				{
+					position.Value = ++currentPosition;
+					text.Value = kanji.Text;
+					priority.Value = String.Join(",", kanji.Priority);
+					cmd.ExecuteNonQuery();
+				}
+			}
+		}
+	}
+
+	private void InsertReading(IList<JMDict.Entry> entries)
+	{
+		using (var cmd = this.db.CreateCommand())
+		{
+			cmd.CommandText = @"
+				INSERT INTO entries_reading
+					(sequence, position, text, priority)
+				VALUES
+					($sequence, $position, $text, $priority)
+			";
+
+			var sequence = cmd.AddParam("$sequence");
+			var position = cmd.AddParam("$position");
+			var text = cmd.AddParam("$text");
+			var priority = cmd.AddParam("$priority");
+
+			foreach (var entry in entries)
+			{
+				sequence.Value = entry.Sequence;
+
+				var currentPosition = 0;
+				foreach (var reading in entry.Reading)
+				{
+					position.Value = ++currentPosition;
+					text.Value = reading.Text;
+					priority.Value = String.Join(",", reading.Priority);
+					cmd.ExecuteNonQuery();
+				}
+			}
+		}
+	}
+
+	private void InsertSense(IList<JMDict.Entry> entries)
+	{
+		using (var cmd = this.db.CreateCommand())
+		{
+			cmd.CommandText = @"
+				INSERT INTO entries_sense
+					(sequence, position, tags_misc, glossary)
+				VALUES
+					($sequence, $position, $tags_misc, $glossary)
+			";
+
+			var sequence = cmd.AddParam("$sequence");
+			var position = cmd.AddParam("$position");
+			var tagsMisc = cmd.AddParam("$tags_misc");
+			var glossary = cmd.AddParam("$glossary");
+
+			foreach (var entry in entries)
+			{
+				sequence.Value = entry.Sequence;
+
+				var currentPosition = 0;
+				var glossaryText = new StringBuilder();
+				var filteredSenses = entry.Sense.Where(x => x.Lang == "eng" && !x.IsEmpty);
+				foreach (var sense in filteredSenses)
+				{
+					position.Value = ++currentPosition;
+					tagsMisc.Value = String.Join(",", sense.Misc);
+
+					glossaryText.Clear();
+					foreach (var glossaryEntry in sense.Glossary)
+					{
+						if (glossaryText.Length > 0)
+						{
+							glossaryText.Append(Dictionary.EntryDatabase.GLOSSARY_ENTRY_SEPARATOR);
+						}
+						glossaryText.AppendFormat("{0}{1}{2}",
+							glossaryEntry.Type,
+							Dictionary.EntryDatabase.GLOSSARY_FIELD_SEPARATOR,
+							glossaryEntry.Text);
+					}
+					glossary.Value = glossaryText.ToString();
+					cmd.ExecuteNonQuery();
+				}
+			}
 		}
 	}
 }

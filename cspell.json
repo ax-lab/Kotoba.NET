@@ -17,11 +17,14 @@
 		"JLPT",
 		"jparser",
 		"kotoba",
+		"mecab",
 		"ROWID",
 		"wasei",
 		"xunit"
 	],
 	"ignoreWords": [],
 	"import": [],
-	"ignoreRegExpList": ["`[\\w\\s]+`"]
+	"ignoreRegExpList": [
+		"`[\\w\\s]+`"
+	]
 }

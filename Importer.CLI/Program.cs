@@ -44,7 +44,7 @@ public static class Program
 	static void ImportEntries(string targetDirectory)
 	{
 		var fileName = Path.Join(targetDirectory, "entries.db");
-		Console.WriteLine(">>> Importing dictionary entries...");
+		Console.WriteLine(">>> Importing dictionary entries <<<");
 		using (var db = new EntriesWriter(fileName))
 		{
 			if (db.HasEntries)
@@ -53,17 +53,30 @@ public static class Program
 				return;
 			}
 
-			Console.WriteLine("... Generating new {0}", db.Name);
+			Console.WriteLine("--> Generating new {0}...", db.Name);
 			using (var dict = Importer.JMDict.Open())
 			{
 				var importTime = Measure.Start();
 				var entries = dict.ReadEntries().ToList();
 				importTime.Stop();
 
-				Console.WriteLine("... Imported {0} entries in {1}, writing database...", entries.Count, importTime.Elapsed);
+				Console.WriteLine("... Imported {0} entries in {1}...", entries.Count, importTime.Elapsed);
 
+				var frequencyTime = Measure.Start();
+				var innocentCorpus = Frequency.OpenInnocentCorpus();
+				var worldLex = Frequency.OpenWorldLex();
+				frequencyTime.Stop();
+				// count below is -1 due to the total count entry
+				Console.WriteLine("... Imported {0} and {1} frequency entries in {2}...",
+					innocentCorpus.Count - 1, worldLex.Count - 1, frequencyTime.Elapsed);
+
+				Console.WriteLine("... Creating database...");
 				var writeTime = Measure.Start();
-				db.InsertEntries(entries, dict.Tags);
+				db.InsertEntries(entries, dict.Tags, new EntriesWriter.FrequencyData
+				{
+					WorldLex = worldLex,
+					InnocentCorpus = innocentCorpus,
+				});
 				writeTime.Stop();
 
 				Console.WriteLine("=== Database write took {0}", writeTime.Elapsed);

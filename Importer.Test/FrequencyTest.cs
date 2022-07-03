@@ -45,6 +45,8 @@ public class FrequencyTest
 	{
 		var frequency = Frequency.OpenInnocentCorpus();
 		frequency["分かる"].Should().Be(376798);
+		frequency["感じ"].Should().Be(169544);
+		frequency["の"].Should().Be(21086758);
 		frequency[""].Should().BeGreaterThan(100_000_000L);
 	}
 }

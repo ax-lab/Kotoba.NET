@@ -1,5 +1,3 @@
-namespace Dictionary.Test;
-
 public class EntriesTest
 {
 	[Fact]
@@ -35,14 +33,14 @@ public class EntriesTest
 	}
 
 	[Fact]
-	public void should_not_have_empty_senses()
+	public void does_not_have_empty_senses()
 	{
 		var entry = GetEntry(1016140);
 		entry.Sense.Where(x => x.Glossary.Count == 0).Should().BeEmpty();
 	}
 
 	[Fact]
-	public void should_load_priority()
+	public void loads_priority()
 	{
 		var entry = GetEntry(1001670);
 		entry.Kanji[0].Priority.Should().Equal("news1", "nf23");
@@ -51,7 +49,7 @@ public class EntriesTest
 	}
 
 	[Fact]
-	public void should_load_misc_info_for_senses()
+	public void loads_misc_info_for_senses()
 	{
 		var entry = GetEntry(1000320);
 		entry.Sense[0].Misc.Select(x => x.Name).Should().Equal("uk");
@@ -59,13 +57,13 @@ public class EntriesTest
 	}
 
 	[Fact]
-	public void GetTag_should_return_non_existent_tag()
+	public void GetTag_returns_non_existent_tag()
 	{
 		Entries.GetTag("this-is-not-a-tag").Should().Be(new Tag("this-is-not-a-tag", ""));
 	}
 
 	[Fact]
-	public void should_load_tags_for_sense_misc()
+	public void loads_tags_for_sense_misc()
 	{
 		Entries.Tags.Should().Contain(x => x.Name == "uk" && x.Info.Contains("written using kana"));
 		Entries.Tags.Should().Contain(x => x.Name == "abbr" && x.Info == "abbreviation");

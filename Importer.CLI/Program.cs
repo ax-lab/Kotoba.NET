@@ -54,16 +54,16 @@ public static class Program
 			}
 
 			Console.WriteLine("... Generating new {0}", db.Name);
-			using (var xml = Importer.JMDict.Open())
+			using (var dict = Importer.JMDict.Open())
 			{
 				var importTime = Measure.Start();
-				var entries = Importer.JMDict.ReadEntries(xml).ToList();
+				var entries = dict.ReadEntries().ToList();
 				importTime.Stop();
 
 				Console.WriteLine("... Imported {0} entries in {1}, writing database...", entries.Count, importTime.Elapsed);
 
 				var writeTime = Measure.Start();
-				db.InsertEntries(entries);
+				db.InsertEntries(entries, dict.Tags);
 				writeTime.Stop();
 
 				Console.WriteLine("=== Database write took {0}", writeTime.Elapsed);

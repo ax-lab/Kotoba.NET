@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 
@@ -84,7 +85,7 @@ using System.Xml;
 /// For additional information about the file format and fields check the
 /// documentation in the <c>JMdict.gz</c> readme.
 /// </remarks>
-public static class JMDict
+public class JMDict : IDisposable
 {
 	private const string XmlNamespace = "http://www.w3.org/XML/1998/namespace";
 
@@ -135,6 +136,8 @@ public static class JMDict
 		}
 
 		public IList<Glossary> Glossary { get; } = new List<Glossary>();
+
+		public IList<string> Misc { get; } = new List<string>();
 	}
 
 	public record Glossary
@@ -146,12 +149,33 @@ public static class JMDict
 		public string Text { get; internal set; } = "";
 	}
 
-	public static XmlReader Open()
+	public static JMDict Open()
 	{
-		return Data.OpenXmlGZip("JMdict.gz");
+		var xml = Data.OpenXmlGZip("JMdict.gz");
+		return new JMDict(xml);
 	}
 
-	public static IEnumerable<Entry> ReadEntries(XmlReader xml)
+	private readonly XmlTextReader xml;
+	private readonly Dictionary<string, string> tags = new Dictionary<string, string>();
+
+	public IReadOnlyDictionary<string, string> Tags
+	{
+		get => tags;
+	}
+
+	private JMDict(XmlTextReader xml)
+	{
+		this.xml = xml;
+		this.xml.EntityHandling = EntityHandling.ExpandCharEntities;
+		this.xml.DtdProcessing = DtdProcessing.Parse;
+	}
+
+	public void Dispose()
+	{
+		xml.Dispose();
+	}
+
+	public IEnumerable<Entry> ReadEntries()
 	{
 		while (xml.Read())
 		{
@@ -167,7 +191,7 @@ public static class JMDict
 		}
 	}
 
-	private static Entry ParseEntry(XmlReader xml)
+	private Entry ParseEntry(XmlReader xml)
 	{
 		bool parsing = true;
 
@@ -213,7 +237,7 @@ public static class JMDict
 		return entry;
 	}
 
-	private static Kanji ParseKanji(XmlReader xml)
+	private Kanji ParseKanji(XmlReader xml)
 	{
 		var kanji = new Kanji { };
 		while (xml.Read())
@@ -238,7 +262,7 @@ public static class JMDict
 		return kanji;
 	}
 
-	private static Reading ParseReading(XmlReader xml)
+	private Reading ParseReading(XmlReader xml)
 	{
 		var reading = new Reading { };
 		while (xml.Read())
@@ -265,14 +289,14 @@ public static class JMDict
 
 	private static readonly Regex rePriority = new Regex(@"^(news[12]|ichi[12]|spec[12]|gai[12]|nf\d{2})$");
 
-	private static string ReadPriority(XmlReader xml)
+	private string ReadPriority(XmlReader xml)
 	{
 		var priority = xml.ReadElementContentAsString();
 		Debug.Assert(rePriority.IsMatch(priority));
 		return priority;
 	}
 
-	private static Sense ParseSense(XmlReader xml)
+	private Sense ParseSense(XmlReader xml)
 	{
 		var sense = new Sense { };
 		while (xml.Read())
@@ -280,18 +304,28 @@ public static class JMDict
 			switch (xml.NodeType)
 			{
 				case XmlNodeType.Element:
-					if (xml.LocalName == TagEntrySenseGlossary)
+					switch (xml.LocalName)
 					{
-						var glossary = ParseSenseGlossary(xml);
-						if (sense.Glossary.Count == 0)
-						{
-							sense.Lang = glossary.Lang;
-						}
-						else
-						{
-							Debug.Assert(sense.Lang == glossary.Lang);
-						}
-						sense.Glossary.Add(glossary);
+						case TagEntrySenseGlossary:
+							{
+								var glossary = ParseSenseGlossary(xml);
+								if (sense.Glossary.Count == 0)
+								{
+									sense.Lang = glossary.Lang;
+								}
+								else
+								{
+									Debug.Assert(sense.Lang == glossary.Lang);
+								}
+								sense.Glossary.Add(glossary);
+								break;
+							}
+						case TagEntrySenseMisc:
+							{
+								var tag = ReadElementAsTag(xml.ReadSubtree());
+								sense.Misc.Add(tag);
+								break;
+							}
 					}
 					break;
 			}
@@ -299,7 +333,7 @@ public static class JMDict
 		return sense;
 	}
 
-	private static Glossary ParseSenseGlossary(XmlReader xml)
+	private Glossary ParseSenseGlossary(XmlReader xml)
 	{
 		var glossary = new Glossary { };
 		var lang = xml.GetAttribute("lang", XmlNamespace);
@@ -310,6 +344,42 @@ public static class JMDict
 		glossary.Type = xml.GetAttribute("g_type") ?? "";
 		glossary.Text = xml.ReadElementContentAsString();
 		return glossary;
+	}
+
+	/// <summary>
+	/// Read an element that contains a tag content.
+	/// </summary>
+	private string ReadElementAsTag(XmlReader xml)
+	{
+		/*
+			In `JMdict.xml` tags are declared as `<!ENTITY tag ...>` and are
+			referenced in elements (e.g. `<something>&tag;</something>`).
+
+			In this method we are assuming that this is always the case, i.e.,
+			a tag element has a single entity reference in it. We use this to
+			keep the entity as the tag name, but extract the expanded text.
+		*/
+		var tagName = "";
+		var tagText = "";
+		while (xml.Read())
+		{
+			switch (xml.NodeType)
+			{
+				case XmlNodeType.EntityReference:
+					// We don't want to expand entities as tags
+					Debug.Assert(tagName == "");
+					tagName = xml.LocalName;
+					xml.ResolveEntity();
+					break;
+				case XmlNodeType.Text:
+					Debug.Assert(tagText == "");
+					tagText = xml.Value;
+					break;
+			}
+		}
+		Debug.Assert(tagName != "" && tagText != "");
+		this.tags.TryAdd(tagName, tagText);
+		return tagName;
 	}
 
 	#region Schema
@@ -329,6 +399,7 @@ public static class JMDict
 
 	const string TagEntrySense = "sense";
 	const string TagEntrySenseGlossary = "gloss";
+	const string TagEntrySenseMisc = "misc";
 
 	#endregion
 }

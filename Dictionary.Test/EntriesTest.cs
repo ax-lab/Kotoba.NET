@@ -50,6 +50,28 @@ public class EntriesTest
 		entry.Reading[0].Priority.Should().Equal("ichi2", "news1", "nf23");
 	}
 
+	[Fact]
+	public void should_load_misc_info_for_senses()
+	{
+		var entry = GetEntry(1000320);
+		entry.Sense[0].Misc.Select(x => x.Name).Should().Equal("uk");
+		entry.Sense[1].Misc.Select(x => x.Name).Should().Equal("col", "uk");
+	}
+
+	[Fact]
+	public void GetTag_should_return_non_existent_tag()
+	{
+		Entries.GetTag("this-is-not-a-tag").Should().Be(new Tag("this-is-not-a-tag", ""));
+	}
+
+	[Fact]
+	public void should_load_tags_for_sense_misc()
+	{
+		Entries.Tags.Should().Contain(x => x.Name == "uk" && x.Info.Contains("written using kana"));
+		Entries.Tags.Should().Contain(x => x.Name == "abbr" && x.Info == "abbreviation");
+		Entries.GetTag("col").Info.Should().Be("colloquialism");
+	}
+
 	private Entry GetEntry(long id)
 	{
 		return Entries.ById(id) ?? throw new Exception(String.Format("entry {0} not found", id));

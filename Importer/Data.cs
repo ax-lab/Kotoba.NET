@@ -52,15 +52,11 @@ internal static class Data
 	/// <summary>
 	/// Helper to <see cref="OpenFile"/> a gzip XML file.
 	/// </summary>
-	public static XmlReader OpenXmlGZip(string fileName)
+	public static XmlTextReader OpenXmlGZip(string fileName)
 	{
 		var input = OpenFile(fileName);
 		var unzip = new GZipStream(input, CompressionMode.Decompress);
-
-		var settings = new XmlReaderSettings();
-		settings.DtdProcessing = DtdProcessing.Parse;
-
-		return XmlReader.Create(unzip, settings);
+		return new XmlTextReader(unzip);
 	}
 
 	/// <summary>

@@ -101,6 +101,7 @@ public class EntryDatabase : Database
 			using (var reader = command.ExecuteReader())
 			{
 				var colText = reader.GetOrdinal("glossary");
+				var colTagsMisc = reader.GetOrdinal("tags_misc");
 				while (reader.Read())
 				{
 					var glossary = reader.GetString(colText)
@@ -116,14 +117,22 @@ public class EntryDatabase : Database
 							return glossary;
 						})
 						.ToList();
+
+					var misc = LoadTags(reader.GetString(colTagsMisc));
 					var sense = new EntrySense
 					{
 						Glossary = glossary,
+						Misc = misc,
 					};
 					output.Add(sense);
 				}
 			}
 		}
 		return output;
+	}
+
+	private static List<Tag> LoadTags(string tagList)
+	{
+		return tagList.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => Entries.GetTag(x)).ToList();
 	}
 }

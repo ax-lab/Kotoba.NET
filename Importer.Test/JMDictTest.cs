@@ -10,10 +10,10 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 	[Fact]
 	public void opens_file()
 	{
-		using (var xml = JMDict.Open())
+		using (var dict = JMDict.Open())
 		{
-			xml.Should().NotBeNull();
-			xml.Read().Should().BeTrue();
+			var list = dict.ReadEntries().Take(10).ToList();
+			list.Count.Should().Be(10);
 		}
 	}
 
@@ -79,6 +79,24 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 	}
 
 	[Fact]
+	public void read_sense_glossary_misc()
+	{
+		Check("1000130", x =>
+		{
+			x.Sense[0].Misc.Should().Equal("abbr");
+		});
+
+		Check("1000320", x =>
+		{
+			x.Sense[0].Misc.Should().Equal("uk");
+			x.Sense[1].Misc.Should().Equal("col", "uk");
+		});
+
+		fixture.Tags.Should().ContainKey("uk").WhoseValue.Contains("written using kana");
+		fixture.Tags.Should().ContainKey("abbr").WhoseValue.Equals("abbreviation");
+	}
+
+	[Fact]
 	public void reads_priority()
 	{
 		Check("1001670", x =>
@@ -100,15 +118,18 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 	{
 		private readonly Dictionary<string, JMDict.Entry> entries;
 
+		public readonly IReadOnlyDictionary<string, string> Tags;
+
 		public Fixture()
 		{
-			using (var xml = JMDict.Open())
+			using (var dict = JMDict.Open())
 			{
 				// avoid reading the entire file to keep the tests fast
-				entries = JMDict
-					.ReadEntries(xml)
+				entries = dict
+					.ReadEntries()
 					.TakeWhile(x => String.Compare(x.Sequence, "1009999") < 0)
 					.ToDictionary(x => x.Sequence);
+				this.Tags = dict.Tags;
 			}
 		}
 

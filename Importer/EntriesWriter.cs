@@ -12,11 +12,20 @@ public class EntriesWriter : DatabaseWriter
 			- The `priority` columns are a CSV list of priorities as documented
 			in the JMDict code.
 
+			- Each of the `tags` columns are a CSV list referencing the `tags`
+			table.
+
 			- The `glossary` entries are separated by `EntryDatabase.GLOSSARY_ENTRY_SEPARATOR`.
 			- Each `glossary` entry has fields separated by `EntryDatabase.GLOSSARY_FIELD_SEPARATOR`.
 		*/
 
 		this.ExecuteCommand(@"
+			CREATE TABLE IF NOT EXISTS tags (
+				name TEXT,
+				info TEXT,
+				PRIMARY KEY(name ASC)
+			) WITHOUT ROWID;
+
 			CREATE TABLE IF NOT EXISTS entries (
 				sequence INTEGER PRIMARY KEY
 			);
@@ -38,9 +47,10 @@ public class EntriesWriter : DatabaseWriter
 			) WITHOUT ROWID;
 
 			CREATE TABLE IF NOT EXISTS entries_sense(
-				sequence INTEGER,
-				position INTEGER,
-				glossary TEXT,
+				sequence  INTEGER,
+				position  INTEGER,
+				glossary  TEXT,
+				tags_misc TEXT,
 				PRIMARY KEY(sequence ASC, position ASC)
 			) WITHOUT ROWID;
 		");
@@ -51,10 +61,32 @@ public class EntriesWriter : DatabaseWriter
 		get => this.ExecuteScalar<int>("SELECT COUNT(*) FROM entries") > 0;
 	}
 
-	public void InsertEntries(IList<JMDict.Entry> entries)
+	public void InsertEntries(IList<JMDict.Entry> entries, IReadOnlyDictionary<string, string> tags)
 	{
 		using (var trans = this.db.BeginTransaction())
 		{
+			using (var cmdInsertTag = this.db.CreateCommand())
+			{
+				cmdInsertTag.CommandText = @"
+					INSERT INTO tags(name, info) VALUES ($name, $info)
+				";
+
+				var name = cmdInsertTag.CreateParameter();
+				name.ParameterName = "$name";
+				cmdInsertTag.Parameters.Add(name);
+
+				var info = cmdInsertTag.CreateParameter();
+				info.ParameterName = "$info";
+				cmdInsertTag.Parameters.Add(info);
+
+				foreach (var (key, val) in tags)
+				{
+					name.Value = key;
+					info.Value = val;
+					cmdInsertTag.ExecuteNonQuery();
+				}
+			}
+
 			using (var cmdInsertEntry = this.db.CreateCommand())
 			{
 				cmdInsertEntry.CommandText = @"
@@ -151,8 +183,8 @@ public class EntriesWriter : DatabaseWriter
 			using (var cmdInsertSense = this.db.CreateCommand())
 			{
 				cmdInsertSense.CommandText = @"
-					INSERT INTO entries_sense(sequence, position, glossary)
-					VALUES ($sequence, $position, $glossary)
+					INSERT INTO entries_sense(sequence, position, tags_misc, glossary)
+					VALUES ($sequence, $position, $tags_misc, $glossary)
 				";
 
 				var paramSequence = cmdInsertSense.CreateParameter();
@@ -162,6 +194,10 @@ public class EntriesWriter : DatabaseWriter
 				var paramPosition = cmdInsertSense.CreateParameter();
 				paramPosition.ParameterName = "$position";
 				cmdInsertSense.Parameters.Add(paramPosition);
+
+				var paramTagsMisc = cmdInsertSense.CreateParameter();
+				paramTagsMisc.ParameterName = "$tags_misc";
+				cmdInsertSense.Parameters.Add(paramTagsMisc);
 
 				var paramGlossary = cmdInsertSense.CreateParameter();
 				paramGlossary.ParameterName = "$glossary";
@@ -177,6 +213,7 @@ public class EntriesWriter : DatabaseWriter
 					foreach (var sense in filteredSenses)
 					{
 						paramPosition.Value = ++position;
+						paramTagsMisc.Value = String.Join(",", sense.Misc);
 
 						glossaryText.Clear();
 						foreach (var glossary in sense.Glossary)

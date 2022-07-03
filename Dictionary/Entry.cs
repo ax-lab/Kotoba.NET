@@ -28,6 +28,8 @@ public record EntryReading
 public record EntrySense
 {
 	public IReadOnlyList<EntrySenseGlossary> Glossary { get; init; } = new List<EntrySenseGlossary>();
+
+	public IReadOnlyList<Tag> Misc { get; init; } = new List<Tag>();
 }
 
 public record EntrySenseGlossary

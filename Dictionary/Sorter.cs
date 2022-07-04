@@ -15,6 +15,8 @@ public static class Sorter
 		public IEnumerable<string>? Priority = null;
 	}
 
+	static readonly Regex reNFrequencyTag = new Regex(@"^nf\d{2}$");
+
 	/// <summary>
 	/// Compares information about two entries and returns the sort order
 	/// between them considering higher relevance first.
@@ -27,14 +29,33 @@ public static class Sorter
 	/// </returns>
 	public static int Compare(Args a, Args b)
 	{
-		var aPri = NoPriorityTagGroup;
-		var bPri = NoPriorityTagGroup;
+		int? priA = null;
+		int? priB = null;
+
+		int? nfA = null;
+		int? nfB = null;
+
+		var parseTag = (string tag, ref int? pri, ref int? nf) =>
+		{
+			var tagPri = GetPriorityGroup(tag);
+			if (tagPri != null)
+			{
+				if (pri == null || tagPri < pri)
+				{
+					pri = tagPri;
+				}
+			}
+			else if (reNFrequencyTag.IsMatch(tag))
+			{
+				nf = int.Parse(tag.Substring(2));
+			}
+		};
 
 		if (a.Priority != null)
 		{
 			foreach (var tag in a.Priority)
 			{
-				aPri = Math.Min(aPri, GetPriorityGroup(tag));
+				parseTag(tag, ref priA, ref nfA);
 			}
 		}
 
@@ -42,13 +63,18 @@ public static class Sorter
 		{
 			foreach (var tag in b.Priority)
 			{
-				bPri = Math.Min(bPri, GetPriorityGroup(tag));
+				parseTag(tag, ref priB, ref nfB);
 			}
 		}
 
-		if (aPri != bPri)
+		if (priA != priB)
 		{
-			return aPri.CompareTo(bPri);
+			return (priA ?? int.MaxValue).CompareTo(priB ?? int.MaxValue);
+		}
+
+		if (nfA != nfB)
+		{
+			return (nfA ?? int.MaxValue).CompareTo(nfB ?? int.MaxValue);
 		}
 
 		return 0;
@@ -56,11 +82,7 @@ public static class Sorter
 
 	#region Priority tags
 
-	static readonly Regex reNFrequencyTag = new Regex(@"^nf\d{2}$");
-
-	const int NoPriorityTagGroup = 999;
-
-	public static int GetPriorityGroup(string tag)
+	public static int? GetPriorityGroup(string tag)
 	{
 		switch (tag)
 		{
@@ -79,13 +101,7 @@ public static class Sorter
 			case "ichi2":
 				return 5;
 		}
-
-		if (reNFrequencyTag.IsMatch(tag))
-		{
-			return 100 + int.Parse(tag.Substring(2));
-		}
-
-		return NoPriorityTagGroup;
+		return null;
 	}
 
 	#endregion

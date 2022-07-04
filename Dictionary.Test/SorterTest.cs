@@ -63,6 +63,53 @@ public class SorterTest
 		);
 	}
 
+	[Fact]
+	public void sort_by_frequency_tags()
+	{
+		CheckSorted(1,
+			new Sorter.Args
+			{
+				Priority = new string[] { "news1", "nf10" }
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "news1", "nf11" }
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec1", "nf12" }
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec2", "nf01" }
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec2", "nf02" }
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "x", "nf01" }
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "x", "nf02" }
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "nf03" }
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "x", "nf04" }
+			},
+			new Sorter.Args
+			{
+				Priority = null
+			}
+		);
+	}
+
 	[Theory]
 	[InlineData("news1", 0)]
 	[InlineData("ichi1", 0)]
@@ -72,13 +119,11 @@ public class SorterTest
 	[InlineData("gai2", 3)]
 	[InlineData("news2", 4)]
 	[InlineData("ichi2", 5)]
-	[InlineData("nf01", 101)]
-	[InlineData("nf02", 102)]
-	[InlineData("nf99", 199)]
-	[InlineData("x", 999)]
-	[InlineData("y", 999)]
-	[InlineData("z", 999)]
-	public void GetPriorityGroup_returns_tag_group(string tag, int expectedPriority)
+	[InlineData("nf01", null)]
+	[InlineData("x", null)]
+	[InlineData("y", null)]
+	[InlineData("z", null)]
+	public void GetPriorityGroup_returns_tag_group(string tag, int? expectedPriority)
 	{
 		Sorter.GetPriorityGroup(tag).Should().Be(expectedPriority);
 	}

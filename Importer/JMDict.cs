@@ -2,7 +2,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 
@@ -41,17 +40,18 @@ using System.Xml;
 	fuzzier and lacks the context necessary to properly associate entries with
 	their frequency.
 
-	Entries in the input file are stably sorted, considering tags in the
-	following order:
+	When sorting by tags, only the highest precedence tag is considered by the
+	following precedence groups:
 
-	- Popular entries (any of `news1`, `ichi1`, `spec1`, `spec2`, and `gai1`).
-	- Entries with `nfXX` tags, sorted by their group number. This is also used
-	as a tie-breaker for popular entries.
-	- Other priority tags in order: `spec2`, `news2`, `gai2`, `ichi2`.
-	- Entries with any frequency information at all.
+	- news1, ichi1, spec1
+	- spec2
+	- gai1
+	- gai2
+	- news2
+	- ichi2
 
-	Within groups, the frequency information is used as a tie-breaker where
-	available.
+	The `nfXX` tags never occur alone, so they are used only as tie-breaker
+	when present.
 
 	Frequency information is divided by reliability. Frequency for an entry
 	is considered reliable if:

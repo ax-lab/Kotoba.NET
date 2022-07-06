@@ -2,10 +2,39 @@ namespace Dictionary;
 
 public static class Frequency
 {
-	public record Entry
+	public record Entry : IComparable<Entry>
 	{
 		public long? InnocentCorpus { get; init; }
 		public WorldLex? WorldLex { get; init; }
+
+		public int CompareTo(Entry? other)
+		{
+			var icA = this.InnocentCorpus;
+			var icB = other?.InnocentCorpus;
+			var icCmp = (icA ?? 0).CompareTo(icB ?? 0);
+			if (icCmp != 0)
+			{
+				// highest values come first
+				return -icCmp;
+			}
+
+			var lexA =
+				(this.WorldLex?.Blog ?? 0) +
+				(this.WorldLex?.News ?? 0) +
+				(this.WorldLex?.Twitter ?? 0);
+			var lexB =
+				(other?.WorldLex?.Blog ?? 0) +
+				(other?.WorldLex?.News ?? 0) +
+				(other?.WorldLex?.Twitter ?? 0);
+
+			var lexCmp = lexA.CompareTo(lexB);
+			if (lexCmp != 0)
+			{
+				return -lexCmp;
+			}
+
+			return 0;
+		}
 	}
 
 	public record WorldLex

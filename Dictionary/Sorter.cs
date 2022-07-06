@@ -12,7 +12,15 @@ public static class Sorter
 	/// </summary>
 	public class Args
 	{
-		public IEnumerable<string>? Priority = null;
+		/// <summary>
+		/// Priority tags for the entry.
+		/// </summary>
+		public IEnumerable<string>? Priority;
+
+		/// <summary>
+		/// Frequency information when available.
+		/// </summary>
+		public Frequency.Entry? Frequency;
 	}
 
 	static readonly Regex reNFrequencyTag = new Regex(@"^nf\d{2}$");
@@ -75,6 +83,15 @@ public static class Sorter
 		if (nfA != nfB)
 		{
 			return (nfA ?? int.MaxValue).CompareTo(nfB ?? int.MaxValue);
+		}
+
+		if (a.Frequency != null)
+		{
+			return a.Frequency.CompareTo(b.Frequency);
+		}
+		else if (b.Frequency != null)
+		{
+			return -b.Frequency.CompareTo(a.Frequency);
 		}
 
 		return 0;

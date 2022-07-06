@@ -110,6 +110,73 @@ public class SorterTest
 		);
 	}
 
+	[Fact]
+	public void sort_by_innocent_corpus()
+	{
+		CheckSorted(-1,
+			// from lowest to highest
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec2" },
+				Frequency = new Frequency.Entry { InnocentCorpus = 1 },
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec2" },
+				Frequency = new Frequency.Entry { InnocentCorpus = 2 },
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec1" },
+				Frequency = new Frequency.Entry { InnocentCorpus = null },
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec1" },
+				Frequency = new Frequency.Entry { InnocentCorpus = 1 },
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec1" },
+				Frequency = new Frequency.Entry { InnocentCorpus = 2 },
+			}
+		);
+	}
+
+	[Fact]
+	public void sort_by_world_lex()
+	{
+		var F = (Frequency.WorldLex lex) => new Frequency.Entry { WorldLex = lex };
+		CheckSorted(-1,
+			// from lowest to highest
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec2" },
+				Frequency = F(new Frequency.WorldLex { Blog = 1 }),
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec2" },
+				Frequency = F(new Frequency.WorldLex { Blog = 2 }),
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec1" },
+				Frequency = null,
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec1" },
+				Frequency = F(new Frequency.WorldLex { Blog = 1 }),
+			},
+			new Sorter.Args
+			{
+				Priority = new string[] { "spec1" },
+				Frequency = F(new Frequency.WorldLex { Blog = 2 }),
+			}
+		);
+	}
+
 	[Theory]
 	[InlineData("news1", 0)]
 	[InlineData("ichi1", 0)]
@@ -150,6 +217,12 @@ public class SorterTest
 				check(Sorter.Compare(args[i], args[j]), i, j);
 				revCheck(Sorter.Compare(args[j], args[i]), j, i);
 			}
+		}
+
+		// sanity check that comparing any entry to itself returns as equal
+		for (var i = 0; i < args.Length; i++)
+		{
+			shouldBeEqual(Sorter.Compare(args[i], args[i]), i, i);
 		}
 	}
 }

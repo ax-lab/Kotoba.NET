@@ -21,6 +21,21 @@ public static class Sorter
 		/// Frequency information when available.
 		/// </summary>
 		public Frequency.Entry? Frequency;
+
+		/// <summary>
+		/// Indicates if the frequency mapping to the current entry is reliable.
+		/// </summary>
+		/// <remarks>
+		/// The reason for this field is to handle cases where a frequency entry
+		/// may map to a whole array of different words, particularly in the
+		/// case of kana-only entries.
+		/// <para>
+		/// In cases where the mapping is unreliable, we give it a lower priority
+		/// to avoid promoting low-frequency entries that happen to have the
+		/// same reading as a popular kana term.
+		/// </para>
+		/// </remarks>
+		public bool IsFrequencyReliable;
 	}
 
 	static readonly Regex reNFrequencyTag = new Regex(@"^nf\d{2}$");
@@ -83,6 +98,13 @@ public static class Sorter
 		if (nfA != nfB)
 		{
 			return (nfA ?? int.MaxValue).CompareTo(nfB ?? int.MaxValue);
+		}
+
+		var reliableA = a.IsFrequencyReliable && a.Frequency?.IsEmpty == false;
+		var reliableB = b.IsFrequencyReliable && b.Frequency?.IsEmpty == false;
+		if (reliableA != reliableB)
+		{
+			return reliableA ? -1 : +1;
 		}
 
 		if (a.Frequency != null)

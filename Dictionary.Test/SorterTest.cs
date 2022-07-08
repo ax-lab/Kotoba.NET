@@ -64,7 +64,7 @@ public class SorterTest
 	}
 
 	[Fact]
-	public void sort_by_frequency_tags()
+	public void sorts_by_frequency_tags()
 	{
 		CheckSorted(1,
 			new Sorter.Args
@@ -111,7 +111,7 @@ public class SorterTest
 	}
 
 	[Fact]
-	public void sort_by_innocent_corpus()
+	public void sorts_by_innocent_corpus()
 	{
 		CheckSorted(-1,
 			// from lowest to highest
@@ -144,7 +144,7 @@ public class SorterTest
 	}
 
 	[Fact]
-	public void sort_by_world_lex()
+	public void sorts_by_world_lex()
 	{
 		var F = (Frequency.WorldLex lex) => new Frequency.Entry { WorldLex = lex };
 		CheckSorted(-1,
@@ -176,6 +176,75 @@ public class SorterTest
 			}
 		);
 	}
+
+	[Fact]
+	public void sorts_reliable_frequencies_first()
+	{
+		CheckSorted(1,
+			new Sorter.Args
+			{
+				Frequency = new Frequency.Entry { InnocentCorpus = 2 },
+				IsFrequencyReliable = true,
+			},
+			new Sorter.Args
+			{
+				Frequency = new Frequency.Entry { InnocentCorpus = 1 },
+				IsFrequencyReliable = true,
+			},
+			new Sorter.Args
+			{
+				Frequency = new Frequency.Entry { InnocentCorpus = 20 },
+				IsFrequencyReliable = false,
+			},
+			new Sorter.Args
+			{
+				Frequency = new Frequency.Entry { InnocentCorpus = 10 },
+				IsFrequencyReliable = false,
+			},
+			// ignores reliability when no frequency given
+			new Sorter.Args
+			{
+				Frequency = new Frequency.Entry { InnocentCorpus = null },
+				IsFrequencyReliable = true,
+			}
+		);
+	}
+
+	[Fact]
+	public void ignores_reliable_frequency_with_no_frequency_information()
+	{
+		CheckSorted(0,
+			new Sorter.Args { IsFrequencyReliable = true },
+			new Sorter.Args
+			{
+				IsFrequencyReliable = true,
+				Frequency = new Frequency.Entry { }
+			},
+			new Sorter.Args
+			{
+				IsFrequencyReliable = true,
+				Frequency = new Frequency.Entry
+				{
+					InnocentCorpus = 0,
+				},
+			},
+			new Sorter.Args { IsFrequencyReliable = false },
+			new Sorter.Args
+			{
+				IsFrequencyReliable = false,
+				Frequency = new Frequency.Entry { }
+			},
+			new Sorter.Args
+			{
+				IsFrequencyReliable = false,
+				Frequency = new Frequency.Entry
+				{
+					InnocentCorpus = 0,
+				},
+			}
+		);
+	}
+
 
 	[Theory]
 	[InlineData("news1", 0)]

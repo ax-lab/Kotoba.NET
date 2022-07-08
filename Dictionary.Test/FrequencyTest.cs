@@ -15,11 +15,8 @@ public class FrequencyTest
 			WorldLex = new Frequency.WorldLex
 			{
 				Blog = 14786,
-				BlogPerMillion = 995.02M,
 				Twitter = 17859,
-				TwitterPerMillion = 1499.50M,
 				News = 10829,
-				NewsPerMillion = 766.93M,
 			}
 		};
 
@@ -165,6 +162,32 @@ public class FrequencyTest
 		CheckEntryCompare(b, c, -1);
 		CheckEntryCompare(b, d, -1);
 		CheckEntryCompare(c, d, -1);
+	}
+
+	[Fact]
+	public void Entry_IsEmpty_is_true_for_no_frequency_data()
+	{
+		var a = new Frequency.Entry { InnocentCorpus = null };
+		var b = new Frequency.Entry { InnocentCorpus = 0 };
+		var c = new Frequency.Entry { WorldLex = new Frequency.WorldLex { } };
+		var d = new Frequency.Entry { WorldLex = new Frequency.WorldLex { }, InnocentCorpus = 0 };
+		a.IsEmpty.Should().BeTrue();
+		b.IsEmpty.Should().BeTrue();
+		c.IsEmpty.Should().BeTrue();
+		d.IsEmpty.Should().BeTrue();
+	}
+
+	[Fact]
+	public void Entry_IsEmpty_is_false_for_any_frequency_data()
+	{
+		var a = new Frequency.Entry { InnocentCorpus = 1 };
+		var b = new Frequency.Entry { WorldLex = new Frequency.WorldLex { Blog = 1 } };
+		var c = new Frequency.Entry { WorldLex = new Frequency.WorldLex { News = 1 } };
+		var d = new Frequency.Entry { WorldLex = new Frequency.WorldLex { Twitter = 1 } };
+		a.IsEmpty.Should().BeFalse();
+		b.IsEmpty.Should().BeFalse();
+		c.IsEmpty.Should().BeFalse();
+		d.IsEmpty.Should().BeFalse();
 	}
 
 	private static void CheckEntryCompare(Frequency.Entry a, Frequency.Entry? b, int expected)

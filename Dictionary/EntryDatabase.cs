@@ -27,9 +27,6 @@ public class EntryDatabase : Database
 			var colBlog = reader.GetOrdinal("blog");
 			var colNews = reader.GetOrdinal("news");
 			var colTwitter = reader.GetOrdinal("twitter");
-			var colBlogPm = reader.GetOrdinal("blog_pm");
-			var colNewsPm = reader.GetOrdinal("news_pm");
-			var colTwitterPm = reader.GetOrdinal("twitter_pm");
 			while (reader.Read())
 			{
 				var entry = reader.GetString(colEntry);
@@ -37,19 +34,12 @@ public class EntryDatabase : Database
 				var blog = reader.GetIntOrNull(colBlog);
 				var news = reader.GetIntOrNull(colNews);
 				var twitter = reader.GetIntOrNull(colTwitter);
-				var blogPerMillion = reader.GetDecimalOrNull(colBlogPm);
-				var newsPerMillion = reader.GetDecimalOrNull(colNewsPm);
-				var twitterPerMillion = reader.GetDecimalOrNull(colTwitterPm);
 
 				var worldLex = blog != null ? new Frequency.WorldLex
 				{
 					Blog = blog ?? 0,
 					News = news ?? 0,
 					Twitter = twitter ?? 0,
-
-					BlogPerMillion = blogPerMillion ?? 0,
-					NewsPerMillion = newsPerMillion ?? 0,
-					TwitterPerMillion = twitterPerMillion ?? 0,
 				} : null;
 
 				var row = new Frequency.Entry

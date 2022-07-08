@@ -7,6 +7,19 @@ public static class Frequency
 		public long? InnocentCorpus { get; init; }
 		public WorldLex? WorldLex { get; init; }
 
+		public bool IsEmpty
+		{
+			get
+			{
+				var count =
+					(InnocentCorpus ?? 0) +
+					(WorldLex?.Blog ?? 0) +
+					(WorldLex?.News ?? 0) +
+					(WorldLex?.Twitter ?? 0);
+				return count == 0;
+			}
+		}
+
 		public int CompareTo(Entry? other)
 		{
 			var icA = this.InnocentCorpus;
@@ -42,10 +55,6 @@ public static class Frequency
 		public long Blog { get; init; }
 		public long News { get; init; }
 		public long Twitter { get; init; }
-
-		public decimal BlogPerMillion { get; init; }
-		public decimal NewsPerMillion { get; init; }
-		public decimal TwitterPerMillion { get; init; }
 	}
 
 	public static Frequency.Entry? Get(string entry)

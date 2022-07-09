@@ -149,6 +149,38 @@ public class JMDict : IDisposable
 			}
 			return null;
 		}
+
+		public Dictionary.Sorter.Args GetSorterArgs(
+			Dictionary<string, long> innocentCorpusFrequencies,
+			Dictionary<string, Frequency.WorldLex> worldLexFrequencies
+		)
+		{
+			var frequency = GetFrequency(entry =>
+			{
+				var innocentCorpus = innocentCorpusFrequencies.GetValueOrDefault(entry);
+				var worldLex = worldLexFrequencies.GetValueOrDefault(entry);
+				if (innocentCorpus != 0 || worldLex != null)
+				{
+					return new Dictionary.Frequency.Entry
+					{
+						InnocentCorpus = innocentCorpus != 0 ? innocentCorpus : null,
+						WorldLex = worldLex != null ? new Dictionary.Frequency.WorldLex
+						{
+							Blog = worldLex.Blog.Frequency,
+							News = worldLex.News.Frequency,
+							Twitter = worldLex.Twitter.Frequency,
+						} : null,
+					};
+				}
+				return null;
+			});
+			return new Dictionary.Sorter.Args
+			{
+				Priority = this.Priority,
+				Frequency = frequency?.Item1,
+				IsFrequencyReliable = frequency?.Item2 ?? false,
+			};
+		}
 	}
 
 	public record Reading

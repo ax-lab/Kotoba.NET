@@ -193,6 +193,9 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 		};
 		var b2 = new JMDict.Entry
 		{
+			Kanji = {
+				new JMDict.Kanji { Text = "none" },
+			},
 			Reading = {
 				new JMDict.Reading { Text = "x" },
 				new JMDict.Reading { Text = "text" },
@@ -353,6 +356,67 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 		a.GetFrequency(mapper).Should().Be((expected, true));
 		b.GetFrequency(mapper).Should().Be((expected, false));
 		c.GetFrequency(mapper).Should().Be((expected, true));
+	}
+
+	[Fact]
+	public void Entry_GetSorterArgs_should_return_sort_arguments()
+	{
+		var innocent = new Dictionary<string, long> { ["p1"] = 30, ["p2"] = 20 };
+		var worldlex = new Dictionary<string, Frequency.WorldLex>
+		{
+			["w1"] = new Frequency.WorldLex
+			{
+				Blog = new Frequency.WorldLex.Info { Frequency = 3 },
+				News = new Frequency.WorldLex.Info { Frequency = 4 },
+				Twitter = new Frequency.WorldLex.Info { Frequency = 5 },
+			},
+			["w2"] = new Frequency.WorldLex
+			{
+				Blog = new Frequency.WorldLex.Info { Frequency = 2 },
+			},
+		};
+
+		var a = new JMDict.Entry
+		{
+			Kanji = { new JMDict.Kanji { Text = "p1", Priority = { "news1" } } },
+			Reading = { new JMDict.Reading { Priority = { "news2" } } },
+		};
+		var b = new JMDict.Entry
+		{
+			Kanji = { new JMDict.Kanji { Priority = { "news2" } } },
+			Reading = { new JMDict.Reading { Text = "w1", Priority = { "news1" } } },
+		};
+
+		var c = new JMDict.Entry
+		{
+			Kanji = { new JMDict.Kanji { Text = "none", Priority = { "news2" } } },
+			Reading = { new JMDict.Reading { Text = "none", Priority = { "news1" } } },
+		};
+
+		a.GetSorterArgs(innocent, worldlex).Should().BeEquivalentTo(new Dictionary.Sorter.Args
+		{
+			Priority = new List<string> { "news1" },
+			Frequency = new Dictionary.Frequency.Entry
+			{
+				InnocentCorpus = 30,
+			},
+			IsFrequencyReliable = true,
+		});
+
+		b.GetSorterArgs(innocent, worldlex).Should().BeEquivalentTo(new Dictionary.Sorter.Args
+		{
+			Priority = new List<string> { "news1" },
+			Frequency = new Dictionary.Frequency.Entry
+			{
+				WorldLex = new Dictionary.Frequency.WorldLex { Blog = 3, News = 4, Twitter = 5 },
+			},
+			IsFrequencyReliable = false,
+		});
+
+		c.GetSorterArgs(innocent, worldlex).Should().BeEquivalentTo(new Dictionary.Sorter.Args
+		{
+			Priority = new List<string> { "news1" },
+		});
 	}
 
 	private static JMDict.Sense UsuallyKana

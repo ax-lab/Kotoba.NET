@@ -89,6 +89,16 @@ public class JMDict : IDisposable
 {
 	private const string XmlNamespace = "http://www.w3.org/XML/1998/namespace";
 
+	public const string UsuallyKanaTag = "uk";
+
+	private static readonly IComparer<IList<string>> frequencyComparer =
+		Comparer<IList<string>>.Create((a, b) =>
+		{
+			var argsA = new Dictionary.Sorter.Args { Priority = a };
+			var argsB = new Dictionary.Sorter.Args { Priority = b };
+			return Dictionary.Sorter.Compare(argsA, argsB);
+		});
+
 	public record Entry
 	{
 		public string Sequence { get; internal set; } = "";
@@ -98,6 +108,47 @@ public class JMDict : IDisposable
 		public IList<Reading> Reading { get; } = new List<Reading>();
 
 		public IList<Sense> Sense { get; } = new List<Sense>();
+
+		private IList<string>? _priority;
+
+		public IList<string> Priority
+		{
+			get
+			{
+				if (_priority == null)
+				{
+					_priority = Kanji
+						.Select(x => x.Priority)
+						.Concat(Reading.Select(x => x.Priority))
+						.OrderBy(x => x, frequencyComparer)
+						.First();
+				}
+				return _priority;
+			}
+		}
+
+		public bool IsUsuallyKana
+		{
+			get => this.Sense.Any(x => x.Misc.Contains(UsuallyKanaTag));
+		}
+
+		public (Dictionary.Frequency.Entry, bool)? GetFrequency(
+			Func<string, Dictionary.Frequency.Entry?> mapper)
+		{
+			var isKana = IsUsuallyKana;
+			var iter = Kanji.Select(x => (x.Text, true))
+				.Concat(Reading.Select(x => (x.Text, isKana)))
+				.Select(x => (mapper(x.Item1), x.Item2))
+				.Where(x => x.Item1 != null)
+				// we want to sort by items with reliable `true` first
+				.OrderBy(x => (!x.Item2, x.Item1))
+				.GetEnumerator();
+			if (iter.MoveNext())
+			{
+				return iter.Current!;
+			}
+			return null;
+		}
 	}
 
 	public record Reading

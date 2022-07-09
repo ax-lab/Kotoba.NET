@@ -107,6 +107,259 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 		});
 	}
 
+	[Fact]
+	public void Entry_Priority_returns_highest_priority()
+	{
+		var a = new JMDict.Entry
+		{
+			Kanji = {
+				new JMDict.Kanji { Priority = { "news2" } },
+				new JMDict.Kanji { Priority = { "x", "news1" } },
+			},
+			Reading = {
+				new JMDict.Reading { Priority = { "spec2" } },
+			},
+		};
+		var b = new JMDict.Entry
+		{
+			Reading = {
+				new JMDict.Reading { Priority = { "news2" } },
+				new JMDict.Reading { Priority = { "y", "news1" } },
+			},
+			Kanji = {
+				new JMDict.Kanji { Priority = { "spec2" } },
+			}
+		};
+
+		a.Priority.Should().Equal("x", "news1");
+		b.Priority.Should().Equal("y", "news1");
+	}
+
+	[Fact]
+	public void Entry_IsUsuallyKana_should_return_true_for_sense_with_uk_misc_tag()
+	{
+		var a = new JMDict.Entry { };
+		var b = new JMDict.Entry
+		{
+			Sense = {
+				new JMDict.Sense {
+					Misc = { "x", "y" },
+				},
+			},
+		};
+		var c = new JMDict.Entry
+		{
+			Sense = {
+				new JMDict.Sense {
+					Misc = { "x", "y" },
+				},
+				new JMDict.Sense {
+					Misc = { "x", JMDict.UsuallyKanaTag },
+				},
+			},
+		};
+
+		a.IsUsuallyKana.Should().BeFalse();
+		b.IsUsuallyKana.Should().BeFalse();
+		c.IsUsuallyKana.Should().BeTrue();
+
+		Check("1000225", x =>
+		{
+			x.IsUsuallyKana.Should().BeTrue();
+		});
+		Check("1000220", x =>
+		{
+			x.IsUsuallyKana.Should().BeFalse();
+		});
+	}
+
+	[Fact]
+	public void Entry_GetFrequency_should_return_available_frequency()
+	{
+		var a1 = new JMDict.Entry
+		{
+			Kanji = { new JMDict.Kanji { Text = "text" } },
+		};
+		var a2 = new JMDict.Entry
+		{
+			Kanji = {
+				new JMDict.Kanji { Text = "x"},
+				new JMDict.Kanji { Text = "text" },
+			},
+		};
+		var b1 = new JMDict.Entry
+		{
+			Reading = { new JMDict.Reading { Text = "text" } },
+		};
+		var b2 = new JMDict.Entry
+		{
+			Reading = {
+				new JMDict.Reading { Text = "x" },
+				new JMDict.Reading { Text = "text" },
+			},
+		};
+		var c1 = new JMDict.Entry
+		{
+			Kanji = { new JMDict.Kanji { Text = "x" } },
+			Reading = { new JMDict.Reading { Text = "x" } },
+		};
+		var c2 = new JMDict.Entry { };
+
+		var freq = new Dictionary.Frequency.Entry { InnocentCorpus = 123 };
+		var mapper = (string x) => x == "text" ? freq : null;
+		a1.GetFrequency(mapper)?.Item1.Should().Be(freq);
+		a2.GetFrequency(mapper)?.Item1.Should().Be(freq);
+		b1.GetFrequency(mapper)?.Item1.Should().Be(freq);
+		b2.GetFrequency(mapper)?.Item1.Should().Be(freq);
+		c1.GetFrequency(mapper).Should().BeNull();
+		c2.GetFrequency(mapper).Should().BeNull();
+	}
+
+	[Fact]
+	public void Entry_GetFrequency_should_return_highest_frequency()
+	{
+		const long MAX = 30;
+		var freq = new Dictionary<string, Dictionary.Frequency.Entry>
+		{
+			["p1"] = new Dictionary.Frequency.Entry { InnocentCorpus = 30 },
+			["p2"] = new Dictionary.Frequency.Entry { InnocentCorpus = 20 },
+			["p3"] = new Dictionary.Frequency.Entry { InnocentCorpus = 10 },
+		};
+
+		var mapper = (string x) => freq.GetValueOrDefault(x);
+
+		// Note: all entries should have the `uk` tag so that kanji and reading
+		// have the same relative precedence
+
+		var a = new JMDict.Entry
+		{
+			Kanji = {
+				new JMDict.Kanji { Text = "p3"},
+				new JMDict.Kanji { Text = "p2"},
+				new JMDict.Kanji { Text = "p1"},
+			},
+			Sense = { UsuallyKana },
+		};
+		var b = new JMDict.Entry
+		{
+			Reading = {
+				new JMDict.Reading { Text = "p3"},
+				new JMDict.Reading { Text = "p2"},
+				new JMDict.Reading { Text = "p1"},
+			},
+			Sense = { UsuallyKana },
+		};
+		var c = new JMDict.Entry
+		{
+			Kanji = {
+				new JMDict.Kanji { Text = "p3"},
+				new JMDict.Kanji { Text = "p2"},
+			},
+			Reading = {
+				new JMDict.Reading { Text = "p2"},
+				new JMDict.Reading { Text = "p1"},
+			},
+			Sense = { UsuallyKana },
+		};
+		var d = new JMDict.Entry
+		{
+			Kanji = {
+				new JMDict.Kanji { Text = "p2"},
+				new JMDict.Kanji { Text = "p1"},
+			},
+			Reading = {
+				new JMDict.Reading { Text = "p3"},
+				new JMDict.Reading { Text = "p2"},
+			},
+			Sense = { UsuallyKana },
+		};
+
+		a.GetFrequency(mapper)?.Item1.InnocentCorpus.Should().Be(MAX);
+		b.GetFrequency(mapper)?.Item1.InnocentCorpus.Should().Be(MAX);
+		c.GetFrequency(mapper)?.Item1.InnocentCorpus.Should().Be(MAX);
+		d.GetFrequency(mapper)?.Item1.InnocentCorpus.Should().Be(MAX);
+	}
+
+	[Fact]
+	public void Entry_GetFrequency_should_return_reliability()
+	{
+		var mapper = (string x) => new Dictionary.Frequency.Entry { InnocentCorpus = 1 };
+
+		// kanji is reliable
+		var a = new JMDict.Entry
+		{
+			Kanji = { new JMDict.Kanji { Text = "x" } },
+		};
+		// usually kana reading is reliable
+		var b = new JMDict.Entry
+		{
+			Reading = { new JMDict.Reading { Text = "x" } },
+			Sense = { UsuallyKana },
+		};
+		// reading alone is not reliable
+		var c = new JMDict.Entry
+		{
+			Reading = { new JMDict.Reading { Text = "x" } },
+		};
+
+		a.GetFrequency(mapper)?.Item2.Should().BeTrue();
+		b.GetFrequency(mapper)?.Item2.Should().BeTrue();
+		c.GetFrequency(mapper)?.Item2.Should().BeFalse();
+	}
+
+	[Fact]
+	public void Entry_GetFrequency_should_return_reliable_if_available()
+	{
+		var freq = new Dictionary<string, Dictionary.Frequency.Entry>
+		{
+			["p1"] = new Dictionary.Frequency.Entry { InnocentCorpus = 30 },
+			["p2"] = new Dictionary.Frequency.Entry { InnocentCorpus = 20 },
+			["p3"] = new Dictionary.Frequency.Entry { InnocentCorpus = 10 },
+		};
+
+		// always p2
+		var expected = new Dictionary.Frequency.Entry { InnocentCorpus = 20 };
+
+		var mapper = (string x) => freq.GetValueOrDefault(x);
+
+		// reading has a higher precedence, but is not reliable
+		var a = new JMDict.Entry
+		{
+			Kanji = { new JMDict.Kanji { Text = "p2" } },
+			Reading = { new JMDict.Reading { Text = "p1" } },
+		};
+		// no kanji returns the highest reading as unreliable
+		var b = new JMDict.Entry
+		{
+			Reading = {
+				new JMDict.Reading { Text = "p3" },
+				new JMDict.Reading { Text = "p2" },
+			},
+		};
+		// reliable reading returns the highest precedence
+		var c = new JMDict.Entry
+		{
+			Kanji = { new JMDict.Kanji { Text = "p3" } },
+			Reading = { new JMDict.Reading { Text = "p2" } },
+			Sense = { UsuallyKana },
+		};
+		var d = new JMDict.Entry
+		{
+			Kanji = { new JMDict.Kanji { Text = "p2" } },
+			Reading = { new JMDict.Reading { Text = "p3" } },
+			Sense = { UsuallyKana },
+		};
+
+		a.GetFrequency(mapper).Should().Be((expected, true));
+		b.GetFrequency(mapper).Should().Be((expected, false));
+		c.GetFrequency(mapper).Should().Be((expected, true));
+	}
+
+	private static JMDict.Sense UsuallyKana
+	{
+		get => new JMDict.Sense { Misc = { JMDict.UsuallyKanaTag } };
+	}
+
 	private void Check(string id, Action<JMDict.Entry> assertions)
 	{
 		var entry = fixture.Get(id);

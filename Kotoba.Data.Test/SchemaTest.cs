@@ -1,29 +1,14 @@
-public class SchemaTest
+public class SchemaTest : TestHelper
 {
-	private readonly ITestOutputHelper output;
-
-	public SchemaTest(ITestOutputHelper output)
-	{
-		this.output = output;
-	}
+	public SchemaTest(ITestOutputHelper output) : base(output) { }
 
 	[Fact]
 	public async void can_execute_a_simple_query()
 	{
-		var data = await Schema.Execute(@"query { entries { count } }");
-		try
+		await Run(@"query { entries { count } }", data =>
 		{
-			var actual = (long?)JToken.Parse(data).SelectToken("$.data.entries.count");
+			var actual = (long?)data.SelectToken("$.data.entries.count");
 			actual.Should().NotBeNull().And.BeGreaterThan(0);
-		}
-		catch
-		{
-			output.WriteLine("");
-			output.WriteLine("---------------- JSON ----------------");
-			output.WriteLine(data);
-			output.WriteLine("--------------------------------------");
-			output.WriteLine("");
-			throw;
-		}
+		});
 	}
 }

@@ -76,4 +76,18 @@ public static class Entries
 			}
 		}
 	}
+
+	public static IList<Entry> ByIds(params long[] ids)
+	{
+		using (var db = new EntryDatabase())
+		{
+			var idList = String.Join(",", ids.Select(x => x.ToString()));
+			var sql = String.Format("SELECT * FROM entries WHERE sequence IN ({0})", idList);
+			using (var cmd = db.CreateCommand(sql))
+			{
+				cmd.Parameters.AddWithValue("$sequence", ids);
+				return db.QueryEntries(cmd).ToList();
+			}
+		}
+	}
 }

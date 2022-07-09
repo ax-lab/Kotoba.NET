@@ -20,6 +20,17 @@ public class EntriesTest
 	}
 
 	[Fact]
+	public void ByIds_returns_entries_with_ids()
+	{
+		var entries = Entries.ByIds(1264540, 88888888888, 1417330);
+		entries.Count.Should().Be(2);
+		entries[0].Id.Should().Be(1264540);
+		entries[0].Kanji[0].Text.Should().Be("言葉");
+		entries[1].Id.Should().Be(1417330);
+		entries[1].Kanji[0].Text.Should().Be("単語");
+	}
+
+	[Fact]
 	public void Count_should_be_greater_than_zero()
 	{
 		Entries.Count.Should().BeGreaterThan(0);

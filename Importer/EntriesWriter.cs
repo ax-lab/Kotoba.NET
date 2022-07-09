@@ -28,7 +28,10 @@ public class EntriesWriter : DatabaseWriter
 			) WITHOUT ROWID;
 
 			CREATE TABLE IF NOT EXISTS entries (
-				sequence INTEGER PRIMARY KEY
+				sequence INTEGER,
+				position INTEGER,
+				UNIQUE (sequence),
+				UNIQUE (position)
 			);
 
 			CREATE TABLE IF NOT EXISTS entries_kanji(
@@ -36,24 +39,27 @@ public class EntriesWriter : DatabaseWriter
 				position INTEGER,
 				text     TEXT,
 				priority TEXT,
-				PRIMARY KEY(sequence ASC, position ASC)
-			) WITHOUT ROWID;
+				UNIQUE (sequence, position),
+				FOREIGN KEY (sequence) REFERENCES entries(sequence)
+			);
 
 			CREATE TABLE IF NOT EXISTS entries_reading(
 				sequence INTEGER,
 				position INTEGER,
 				text     TEXT,
 				priority TEXT,
-				PRIMARY KEY(sequence ASC, position ASC)
-			) WITHOUT ROWID;
+				UNIQUE (sequence, position),
+				FOREIGN KEY (sequence) REFERENCES entries(sequence)
+			);
 
 			CREATE TABLE IF NOT EXISTS entries_sense(
 				sequence  INTEGER,
 				position  INTEGER,
 				glossary  TEXT,
 				tags_misc TEXT,
-				PRIMARY KEY(sequence ASC, position ASC)
-			) WITHOUT ROWID;
+				UNIQUE (sequence, position),
+				FOREIGN KEY (sequence) REFERENCES entries(sequence)
+			);
 
 			CREATE TABLE IF NOT EXISTS frequency(
 				entry      TEXT,
@@ -64,8 +70,8 @@ public class EntriesWriter : DatabaseWriter
 				blog_pm    TEXT,
 				news_pm    TEXT,
 				twitter_pm TEXT,
-				PRIMARY KEY(entry)
-			) WITHOUT ROWID;
+				PRIMARY KEY (entry)
+			);
 		");
 	}
 
@@ -203,12 +209,16 @@ public class EntriesWriter : DatabaseWriter
 	{
 		using (var cmd = this.db.CreateCommand())
 		{
-			cmd.CommandText = @"INSERT INTO entries(sequence) VALUES ($sequence)";
+			cmd.CommandText = @"INSERT INTO entries(sequence, position) VALUES ($sequence, $position)";
 
 			var sequence = cmd.AddParam("$sequence");
+			var position = cmd.AddParam("$position");
+
+			var count = 0;
 			foreach (var entry in entries)
 			{
 				sequence.Value = entry.Sequence;
+				position.Value = ++count;
 				cmd.ExecuteNonQuery();
 			}
 		}

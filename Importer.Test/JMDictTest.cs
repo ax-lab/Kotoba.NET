@@ -138,9 +138,13 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 	[Fact]
 	public void Entry_IsUsuallyKana_should_return_true_for_sense_with_uk_misc_tag()
 	{
-		var a = new JMDict.Entry { };
+		var a = new JMDict.Entry
+		{
+			Kanji = { new JMDict.Kanji { } },
+		};
 		var b = new JMDict.Entry
 		{
+			Kanji = { new JMDict.Kanji { } },
 			Sense = {
 				new JMDict.Sense {
 					Misc = { "x", "y" },
@@ -149,6 +153,7 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 		};
 		var c = new JMDict.Entry
 		{
+			Kanji = { new JMDict.Kanji { } },
 			Sense = {
 				new JMDict.Sense {
 					Misc = { "x", "y" },
@@ -171,6 +176,16 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 		{
 			x.IsUsuallyKana.Should().BeFalse();
 		});
+	}
+
+	[Fact]
+	public void Entry_IsUsuallyKana_should_return_true_for_entry_with_no_kanji()
+	{
+		var a = new JMDict.Entry
+		{
+			Reading = { new JMDict.Reading { } },
+		};
+		a.IsUsuallyKana.Should().BeTrue();
 	}
 
 	[Fact]
@@ -286,7 +301,7 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 	[Fact]
 	public void Entry_GetFrequency_should_return_reliability()
 	{
-		var mapper = (string x) => new Dictionary.Frequency.Entry { InnocentCorpus = 1 };
+		var mapper = (string x) => x != "" ? new Dictionary.Frequency.Entry { InnocentCorpus = 1 } : null;
 
 		// kanji is reliable
 		var a = new JMDict.Entry
@@ -296,12 +311,14 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 		// usually kana reading is reliable
 		var b = new JMDict.Entry
 		{
+			Kanji = { new JMDict.Kanji { } },
 			Reading = { new JMDict.Reading { Text = "x" } },
 			Sense = { UsuallyKana },
 		};
 		// reading alone is not reliable
 		var c = new JMDict.Entry
 		{
+			Kanji = { new JMDict.Kanji { } },
 			Reading = { new JMDict.Reading { Text = "x" } },
 		};
 
@@ -334,6 +351,7 @@ public class JMDictTest : IClassFixture<JMDictTest.Fixture>
 		// no kanji returns the highest reading as unreliable
 		var b = new JMDict.Entry
 		{
+			Kanji = { new JMDict.Kanji { } },
 			Reading = {
 				new JMDict.Reading { Text = "p3" },
 				new JMDict.Reading { Text = "p2" },

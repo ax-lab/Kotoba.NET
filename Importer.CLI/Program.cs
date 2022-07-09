@@ -70,9 +70,51 @@ public static class Program
 				Console.WriteLine("... Imported {0} and {1} frequency entries in {2}...",
 					innocentCorpus.Count - 1, worldLex.Count - 1, frequencyTime.Elapsed);
 
+				var entryComparer = Comparer<(JMDict.Entry, Dictionary.Sorter.Args)>.Create((a, b) =>
+				{
+					var entryA = a.Item1;
+					var entryB = b.Item1;
+
+					// First sort by priority and frequency...
+					var argsA = a.Item2;
+					var argsB = b.Item2;
+					var argsCmp = Dictionary.Sorter.Compare(argsA, argsB);
+					if (argsCmp != 0)
+					{
+						return argsCmp;
+					}
+
+					// ...failing that, sort by the entry text...
+					var textA = entryA.Kanji
+						.Select(x => x.Text)
+						.Concat(entryA.Reading.Select(x => x.Text))
+						.First();
+					var textB = entryB.Kanji
+						.Select(x => x.Text)
+						.Concat(entryB.Reading.Select(x => x.Text))
+						.First();
+					var textCmp = textA.CompareTo(textB);
+					if (textCmp != 0)
+					{
+						return textCmp;
+					}
+
+					// ...otherwise, just keep it in the input order.
+					return entryA.Sequence.CompareTo(entryB.Sequence);
+				});
+
+				var sortTime = Measure.Start();
+				var sortedEntries = entries
+					.Select(x => (x, x.GetSorterArgs(innocentCorpus, worldLex)))
+					.OrderBy(x => x, entryComparer)
+					.Select(x => x.Item1)
+					.ToList();
+				sortTime.Stop();
+				Console.WriteLine("... Sorted entries in {0}...", sortTime.Elapsed);
+
 				Console.WriteLine("... Creating database...");
 				var writeTime = Measure.Start();
-				db.InsertEntries(entries, dict.Tags, new EntriesWriter.FrequencyData
+				db.InsertEntries(sortedEntries, dict.Tags, new EntriesWriter.FrequencyData
 				{
 					WorldLex = worldLex,
 					InnocentCorpus = innocentCorpus,

@@ -17,6 +17,17 @@
 			"env": {
 				"ASPNETCORE_ENVIRONMENT": "Development"
 			}
+		},
+		{
+			"name": "Debug Import",
+			"type": "coreclr",
+			"request": "launch",
+			"preLaunchTask": "build",
+			"program": "${workspaceFolder}/Importer.CLI/bin/Debug/net6.0/Importer.CLI.exe",
+			"args": ["import", "./data"],
+			"cwd": "${workspaceFolder}",
+			"console": "internalConsole",
+			"stopAtEntry": false
 		}
 	]
 }

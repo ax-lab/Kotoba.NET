@@ -129,7 +129,7 @@ public class JMDict : IDisposable
 
 		public bool IsUsuallyKana
 		{
-			get => this.Sense.Any(x => x.Misc.Contains(UsuallyKanaTag));
+			get => this.Kanji.Count == 0 || this.Sense.Any(x => x.Misc.Contains(UsuallyKanaTag));
 		}
 
 		public (Dictionary.Frequency.Entry, bool)? GetFrequency(

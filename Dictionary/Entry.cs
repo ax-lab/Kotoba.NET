@@ -4,6 +4,8 @@ public record Entry
 {
 	public long Id { get; init; }
 
+	public long Position { get; init; }
+
 	public IReadOnlyList<EntryKanji> Kanji { get; init; } = new List<EntryKanji>();
 
 	public IReadOnlyList<EntryReading> Reading { get; init; } = new List<EntryReading>();

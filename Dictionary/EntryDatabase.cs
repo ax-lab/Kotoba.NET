@@ -56,16 +56,22 @@ public class EntryDatabase : Database
 	{
 		using (var reader = command.ExecuteReader())
 		{
+			// sequence comes from the source XML and is the entry's id
 			var colSequence = reader.GetOrdinal("sequence");
+			// position is the entry's position after being sorted during import
+			// and corresponds to the order entries are saved in the database
+			var colPosition = reader.GetOrdinal("position");
 			while (reader.Read())
 			{
 				var sequence = reader.GetInt64(colSequence);
+				var position = reader.GetInt64(colPosition);
 				var kanji = this.GetEntryKanji(sequence);
 				var reading = this.GetEntryReading(sequence);
 				var sense = this.GetEntrySense(sequence);
 				yield return new Entry
 				{
 					Id = sequence,
+					Position = position,
 					Kanji = kanji,
 					Reading = reading,
 					Sense = sense,

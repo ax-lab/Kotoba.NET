@@ -82,7 +82,7 @@ public static class Entries
 		using (var db = new EntryDatabase())
 		{
 			var idList = String.Join(",", ids.Select(x => x.ToString()));
-			var sql = String.Format("SELECT * FROM entries WHERE sequence IN ({0})", idList);
+			var sql = String.Format("SELECT * FROM entries WHERE sequence IN ({0}) ORDER BY position", idList);
 			using (var cmd = db.CreateCommand(sql))
 			{
 				cmd.Parameters.AddWithValue("$sequence", ids);

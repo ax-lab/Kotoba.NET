@@ -31,6 +31,16 @@ public class EntriesTest
 	}
 
 	[Fact]
+	public void ByIds_should_sort_by_position()
+	{
+		var entries = Entries.ByIds(1264540, 1311110, 1417330);
+		entries.Count.Should().Be(3);
+		entries[0].Position.Should().BeGreaterThan(0);
+		entries[1].Position.Should().BeGreaterThan(entries[0].Position);
+		entries[2].Position.Should().BeGreaterThan(entries[1].Position);
+	}
+
+	[Fact]
 	public void Count_should_be_greater_than_zero()
 	{
 		Entries.Count.Should().BeGreaterThan(0);
@@ -46,6 +56,8 @@ public class EntriesTest
 	[Fact]
 	public void does_not_have_empty_senses()
 	{
+		// some senses are empty in the input XML, make sure they are not
+		// imported
 		var entry = GetEntry(1016140);
 		entry.Sense.Where(x => x.Glossary.Count == 0).Should().BeEmpty();
 	}

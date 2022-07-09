@@ -52,6 +52,18 @@ public class EntryDatabase : Database
 		}
 	}
 
+	public IEnumerable<Entry> QueryEntries(string sql, params (string, object)[] args)
+	{
+		using (var cmd = this.CreateCommand(sql))
+		{
+			foreach (var (key, val) in args)
+			{
+				cmd.Parameters.AddWithValue(key, val);
+			}
+			return this.QueryEntries(cmd).ToList();
+		}
+	}
+
 	public IEnumerable<Entry> QueryEntries(SqliteCommand command)
 	{
 		using (var reader = command.ExecuteReader())

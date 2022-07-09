@@ -28,7 +28,7 @@ public class EntriesTest
 	[Fact]
 	public void ByIds_returns_entries_with_ids()
 	{
-		var entries = Entries.ByIds(1264540, 88888888888, 1417330);
+		var entries = Entries.ByIds(1264540, 88888888888, 1417330).ToList();
 		entries.Count.Should().Be(2);
 		entries[0].Id.Should().Be(1264540);
 		entries[0].Kanji[0].Text.Should().Be("言葉");
@@ -39,7 +39,7 @@ public class EntriesTest
 	[Fact]
 	public void ByIds_sorts_by_position()
 	{
-		var entries = Entries.ByIds(1264540, 1311110, 1417330);
+		var entries = Entries.ByIds(1264540, 1311110, 1417330).ToList();
 		entries.Count.Should().Be(3);
 		entries[0].Position.Should().BeGreaterThan(0);
 		entries[1].Position.Should().BeGreaterThan(entries[0].Position);
@@ -58,5 +58,18 @@ public class EntriesTest
 		Entries.Tags.Should().Contain(x => x.Name == "uk" && x.Info.Contains("written using kana"));
 		Entries.Tags.Should().Contain(x => x.Name == "abbr" && x.Info == "abbreviation");
 		Entries.GetTag("col").Info.Should().Be("colloquialism");
+	}
+
+	[Fact]
+	public void List_returns_entries_at_the_right_offset()
+	{
+		var get = (long limit, long offset) =>
+		{
+			return Entries.List(limit, offset).Select(x => x.Position);
+		};
+
+		get(5, 0).Should().Equal(1, 2, 3, 4, 5);
+		get(5, 1).Should().Equal(2, 3, 4, 5, 6);
+		get(3, 99).Should().Equal(100, 101, 102);
 	}
 }

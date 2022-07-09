@@ -77,16 +77,27 @@ public static class Entries
 		}
 	}
 
-	public static IList<Entry> ByIds(params long[] ids)
+	public static IEnumerable<Entry> ByIds(params long[] ids)
+	{
+		var idList = String.Join(",", ids.Select(x => x.ToString()));
+		var sql = String.Format("SELECT * FROM entries WHERE sequence IN ({0}) ORDER BY position", idList);
+		return QueryEntries(sql);
+	}
+
+	public static IEnumerable<Entry> List(long limit, long offset = 0)
+	{
+		return QueryEntries(
+			"SELECT * FROM entries LIMIT $limit OFFSET $offset",
+			("$limit", limit), ("$offset", offset));
+	}
+
+	private static IEnumerable<Entry> QueryEntries(string sql, params (string, object)[] args)
 	{
 		using (var db = new EntryDatabase())
 		{
-			var idList = String.Join(",", ids.Select(x => x.ToString()));
-			var sql = String.Format("SELECT * FROM entries WHERE sequence IN ({0}) ORDER BY position", idList);
-			using (var cmd = db.CreateCommand(sql))
+			foreach (var it in db.QueryEntries(sql, args))
 			{
-				cmd.Parameters.AddWithValue("$sequence", ids);
-				return db.QueryEntries(cmd).ToList();
+				yield return it;
 			}
 		}
 	}

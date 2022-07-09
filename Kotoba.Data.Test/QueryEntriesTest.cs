@@ -3,7 +3,7 @@ public class QueryEntriesTest : TestHelper
 	public QueryEntriesTest(ITestOutputHelper output) : base(output) { }
 
 	[Fact]
-	public async void can_load_entry_by_id()
+	public async void loads_by_id()
 	{
 		const string query = @"query {
 			entries {
@@ -23,7 +23,7 @@ public class QueryEntriesTest : TestHelper
 	}
 
 	[Fact]
-	public async void can_load_entry_by_ids()
+	public async void loads_by_ids()
 	{
 		const string query = @"query {
 			entries {
@@ -46,6 +46,40 @@ public class QueryEntriesTest : TestHelper
 			var textB = (string?)entryB?.SelectToken("text");
 			textA.Should().Be("言葉");
 			textB.Should().Be("単語");
+		});
+	}
+
+	[Fact]
+	public async void loads_paged()
+	{
+		const int defaultPageSize = (int)QueryEntries.DefaultPageSize;
+
+		const string query = @"query {
+			entries {
+				listA: list {
+					position
+				}
+				listB: list(limit: 5) {
+					position
+				}
+				listC: list(offset: 99) {
+					position
+				}
+				listD: list(limit: 3, offset: 99) {
+					position
+				}
+			}
+		}";
+		await Run(query, data =>
+		{
+			var listA = data.SelectTokens("$.data.entries.listA[*].position").Select(x => (long)x);
+			var listB = data.SelectTokens("$.data.entries.listB[*].position").Select(x => (long)x);
+			var listC = data.SelectTokens("$.data.entries.listC[*].position").Select(x => (long)x);
+			var listD = data.SelectTokens("$.data.entries.listD[*].position").Select(x => (long)x);
+			listA.Should().StartWith(new long[] { 1, 2, 3, 4, 5 }).And.HaveCount(defaultPageSize);
+			listB.Should().Equal(1, 2, 3, 4, 5);
+			listC.Should().StartWith(new long[] { 100, 101, 102 }).And.HaveCount(defaultPageSize);
+			listD.Should().Equal(100, 101, 102);
 		});
 	}
 }

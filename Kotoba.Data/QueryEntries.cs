@@ -2,6 +2,8 @@ namespace Kotoba.Data;
 
 public class QueryEntries
 {
+	public const long DefaultPageSize = 25;
+
 	public long Count
 	{
 		get => Dictionary.Entries.Count;
@@ -16,6 +18,11 @@ public class QueryEntries
 	public List<QueryEntry> ByIds(long[] ids)
 	{
 		return Dictionary.Entries.ByIds(ids).Select(x => new QueryEntry(x)).ToList();
+	}
+
+	public List<QueryEntry> List(long limit, long offset)
+	{
+		return Dictionary.Entries.List(limit, offset).Select(x => new QueryEntry(x)).ToList();
 	}
 }
 
@@ -50,6 +57,31 @@ public class QueryEntriesType : ObjectGraphType<QueryEntries>
 			{
 				var ids = context.GetArgument<long[]>(argIdList);
 				return context.Source.ByIds(ids);
+			}
+		);
+
+		const string argListLimit = "limit";
+		const string argListOffset = "offset";
+		Field<ListGraphType<QueryEntryType>>("list",
+			arguments: new QueryArguments(
+				new QueryArgument<IntGraphType>
+				{
+					Name = argListLimit,
+					DefaultValue = QueryEntries.DefaultPageSize,
+					Description = "Maximum number of entries to return.",
+				},
+				new QueryArgument<IntGraphType>
+				{
+					Name = argListOffset,
+					DefaultValue = 0,
+					Description = "Offset of the first entry in the list to return."
+				}),
+			description: "Query entries by their list position. Entries are sorted by frequency and relevance.",
+			resolve: context =>
+			{
+				var limit = context.GetArgument<long>(argListLimit);
+				var offset = context.GetArgument<long>(argListOffset);
+				return context.Source.List(limit, offset);
 			}
 		);
 	}

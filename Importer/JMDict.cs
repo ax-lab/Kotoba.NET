@@ -143,11 +143,14 @@ public class JMDict : IDisposable
 				// we want to sort by items with reliable `true` first
 				.OrderBy(x => (!x.Item2, x.Item1))
 				.GetEnumerator();
-			if (iter.MoveNext())
+			using (iter)
 			{
-				return iter.Current!;
+				if (iter.MoveNext())
+				{
+					return iter.Current!;
+				}
+				return null;
 			}
-			return null;
 		}
 
 		public Dictionary.Sorter.Args GetSorterArgs(

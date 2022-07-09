@@ -1,6 +1,12 @@
 public class EntriesTest
 {
 	[Fact]
+	public void Count_is_greater_than_zero()
+	{
+		Entries.Count.Should().BeGreaterThan(0);
+	}
+
+	[Fact]
 	public void ById_returns_null_for_inexistent_id()
 	{
 		var entry = Entries.ById(88888888888);
@@ -31,7 +37,7 @@ public class EntriesTest
 	}
 
 	[Fact]
-	public void ByIds_should_sort_by_position()
+	public void ByIds_sorts_by_position()
 	{
 		var entries = Entries.ByIds(1264540, 1311110, 1417330);
 		entries.Count.Should().Be(3);
@@ -41,60 +47,16 @@ public class EntriesTest
 	}
 
 	[Fact]
-	public void Count_should_be_greater_than_zero()
-	{
-		Entries.Count.Should().BeGreaterThan(0);
-	}
-
-	[Fact]
-	public void loads_glossary_type()
-	{
-		var entry = GetEntry(1010290);
-		entry.Sense[0].Glossary.First(x => x.Type == "lit").Text.Should().Contain("one x mark");
-	}
-
-	[Fact]
-	public void does_not_have_empty_senses()
-	{
-		// some senses are empty in the input XML, make sure they are not
-		// imported
-		var entry = GetEntry(1016140);
-		entry.Sense.Where(x => x.Glossary.Count == 0).Should().BeEmpty();
-	}
-
-	[Fact]
-	public void loads_priority()
-	{
-		var entry = GetEntry(1001670);
-		entry.Kanji[0].Priority.Should().Equal("news1", "nf23");
-		entry.Kanji[1].Priority.Should().Equal("ichi2");
-		entry.Reading[0].Priority.Should().Equal("ichi2", "news1", "nf23");
-	}
-
-	[Fact]
-	public void loads_misc_info_for_senses()
-	{
-		var entry = GetEntry(1000320);
-		entry.Sense[0].Misc.Select(x => x.Name).Should().Equal("uk");
-		entry.Sense[1].Misc.Select(x => x.Name).Should().Equal("col", "uk");
-	}
-
-	[Fact]
 	public void GetTag_returns_non_existent_tag()
 	{
 		Entries.GetTag("this-is-not-a-tag").Should().Be(new Tag("this-is-not-a-tag", ""));
 	}
 
 	[Fact]
-	public void loads_tags_for_sense_misc()
+	public void Tags_contain_entries_for_sense_misc()
 	{
 		Entries.Tags.Should().Contain(x => x.Name == "uk" && x.Info.Contains("written using kana"));
 		Entries.Tags.Should().Contain(x => x.Name == "abbr" && x.Info == "abbreviation");
 		Entries.GetTag("col").Info.Should().Be("colloquialism");
-	}
-
-	private Entry GetEntry(long id)
-	{
-		return Entries.ById(id) ?? throw new Exception(String.Format("entry {0} not found", id));
 	}
 }

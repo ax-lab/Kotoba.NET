@@ -24,7 +24,10 @@ module.exports = {
 		console: true,
 	},
 	rules: {
+		// allow tabs for indent and spaces for alignment
 		'no-mixed-spaces-and-tabs': 'off',
-		'@typescript-eslint/no-non-null-assertion': 'off',
+
+		// allow using any when we don't care about the type
+		'@typescript-eslint/no-explicit-any': 'off',
 	},
 };

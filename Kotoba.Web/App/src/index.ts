@@ -5,16 +5,17 @@ import App from './App';
 
 import './css/main.less';
 
-import * as graphql from './api/graphql';
-
 function init() {
 	const loading = document.getElementById('loading');
 	loading && loading.parentElement?.removeChild(loading);
-	render(App(), document.getElementById('root')!);
+	render(
+		App(),
+		document.getElementById('root') ??
+			(() => {
+				document.body.innerHTML = 'Error rendering application';
+				throw new Error('root rendering element not found');
+			})(),
+	);
 }
-
-console.log('INIT!');
-
-void graphql.query('{ entries { count } }').then((x) => console.log(x));
 
 init();

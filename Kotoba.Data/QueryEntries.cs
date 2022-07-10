@@ -22,7 +22,10 @@ public class QueryEntries
 
 	public List<QueryEntry> List(long limit, long offset)
 	{
-		return Dictionary.Entries.List(limit, offset).Select(x => new QueryEntry(x)).ToList();
+		using (new Measure("Queries.List({0}, {1})", limit, offset))
+		{
+			return Dictionary.Entries.List(limit, offset).Select(x => new QueryEntry(x)).ToList();
+		}
 	}
 }
 

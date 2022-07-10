@@ -4,6 +4,11 @@ export type Entry = {
 	id: number;
 	position: number;
 	text: string;
+	kanji: Array<{ text: string }>;
+	reading: Array<{ text: string }>;
+	sense: Array<{
+		glossary: Array<{ text: string }>;
+	}>;
 };
 
 export async function list({ limit = 0, offset = 0 } = {}) {
@@ -21,7 +26,14 @@ export async function list({ limit = 0, offset = 0 } = {}) {
 		entries {
 			total: count
 			items: list(${args.join(', ')}) {
-				id position text
+				id
+				position
+				text
+				kanji { text }
+				reading { text }
+				sense {
+					glossary { text }
+				}
 			}
 		}
 	}`;

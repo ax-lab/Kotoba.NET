@@ -34,7 +34,20 @@ const ViewEntries = () => {
 			<div>
 				{data.items.map((x) => (
 					<div>
-						<h2>{x.text}</h2>#{x.position} ({x.id})
+						<h2>
+							{x.text}
+							<em style="margin-left: 2em; font-size: 0.8rem">
+								#{x.position} — {x.id}
+							</em>
+						</h2>
+
+						<div>{x.kanji.map((x) => x.text).join(', ')}</div>
+						<div>{x.reading.map((x) => x.text).join(', ')}</div>
+						<ul>
+							{x.sense.map((x) => (
+								<li>{x.glossary.map((x) => x.text).join(', ')}</li>
+							))}
+						</ul>
 					</div>
 				))}
 			</div>

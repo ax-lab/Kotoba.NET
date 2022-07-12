@@ -1,0 +1,12 @@
+﻿{
+	"profiles": {
+		"Kotoba.Web": {
+			"commandName": "Project",
+			"dotnetRunMessages": true,
+			"launchBrowser": false,
+			"environmentVariables": {
+				"ASPNETCORE_ENVIRONMENT": "Development"
+			}
+		}
+	}
+}

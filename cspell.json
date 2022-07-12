@@ -1,0 +1,30 @@
+{
+	"version": "0.2",
+	"ignorePaths": [
+		"obj",
+		"bin",
+		"*.csproj",
+		"*.sln",
+		"cspell.json",
+		"source-data"
+	],
+	"dictionaryDefinitions": [],
+	"dictionaries": [],
+	"words": [
+		"expl",
+		"graphiql",
+		"ichi",
+		"JLPT",
+		"jparser",
+		"kotoba",
+		"mecab",
+		"ROWID",
+		"wasei",
+		"xunit"
+	],
+	"ignoreWords": [],
+	"import": [],
+	"ignoreRegExpList": [
+		"`[\\w\\s]+`"
+	]
+}
